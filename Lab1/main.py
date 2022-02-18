@@ -17,3 +17,5 @@ ev3 = EV3Brick()
 
 # Write your program here.
 ev3.speaker.beep()
+
+move(10, 5)
