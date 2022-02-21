@@ -6,17 +6,18 @@ from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from pybricks.tools import *
-from math import trunc
+import math
 #from constants import LARGE_WHEEL_DIAMETER_MM
 
-def moveForDistance(distanceInMM, speed): 
+def moveForDistance(speed, distanceInMM): 
     ev3 = EV3Brick()
+    print("test")
     leftMotor = Motor(Port.A)
-    rightMotor = Motor(Port.B)
+    rightMotor = Motor(Port.D)
 
     timeNeeded = getTimeToDestinationInMS(distanceInMM, speed)
-    leftMotor.run_time(speed, timeNeeded, Stop, True)
-    rightMotor.run_time(speed, timeNeeded, Stop, True)
+    leftMotor.run_time(speed, timeNeeded, Stop.BRAKE, False)
+    rightMotor.run_time(speed, timeNeeded, Stop.BRAKE, False)
     return
 
 def moveUntilObstacle(speed, distToStopShort):
@@ -50,9 +51,10 @@ def moveUntilContact(speed):
 
 def getCircumference():
     LARGE_WHEEL_DIAMETER_MM = 56
+    return LARGE_WHEEL_DIAMETER_MM * math.pi
 
 def getTimeToDestinationInMS(distance, speed):
     revolutions = distance / getCircumference()
-    return trunc(revolutions * 360 / (speed)) * 1000
+    return math.trunc(revolutions * 360 / (speed)) * 1000
 
     
