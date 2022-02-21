@@ -39,15 +39,17 @@ def moveUntilObstacle(speed, distToStopShort):
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     sonar = UltrasonicSensor(Port.S2)
-
-    distance = sonar.distance()
+    
+    leftMotor.run(speed)
+    rightMotor.run(speed)
+    distance = sonar.distance(False)
     while (distance > distToStopShort):
-        distance = sonar.distance()
-        print(distance)
+        distance = sonar.distance(False)
+        #print(distance)
     
     print("Stopping")
-    leftMotor.hold
-    rightMotor.hold
+    leftMotor.hold()
+    rightMotor.hold()
     return
 
 def moveUntilContact(speed):
