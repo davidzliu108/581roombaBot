@@ -1,5 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-from pickle import TRUE
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -23,19 +22,23 @@ speed = 10
 moveForDistance(speed, 50) # (distance in MM, speed deg/sec )
 ev3.speaker.beep()
 
-while (TRUE): # pauses until button pressed
+paused = True
+while (paused): # pauses until button pressed
     pressed = ev3.buttons.pressed()
     for button in pressed:
         if (button == button.CENTER):
+            paused = False
             break
 
-#moveUntilObstacle(speed, 500) # not implemented yet
+#moveUntilObstacle(speed, 500)
 ev3.speaker.beep()
 
-while (TRUE): # pauses until button pressed
+paused = True
+while (paused): # pauses until button pressed
     pressed = ev3.buttons.pressed()
     for button in pressed:
         if (button == button.CENTER):
+            paused = False
             break
 
 moveUntilContact(speed / 2)

@@ -1,7 +1,3 @@
-from cmath import pi
-from curses import BUTTON1_CLICKED
-from os import truncate
-from pickle import FALSE, TRUE
 from pybricks.hubs import EV3Brick 
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor, 
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -10,6 +6,7 @@ from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from pybricks.tools import *
+from math import trunc
 #from constants import LARGE_WHEEL_DIAMETER_MM
 
 def moveForDistance(distanceInMM, speed): 
@@ -17,9 +14,9 @@ def moveForDistance(distanceInMM, speed):
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.B)
 
-    timeNeeded = getTimeToDestination(distanceInMM, speed)
-    leftMotor.run_time(speed, timeNeeded, Stop, TRUE)
-    rightMotor.run_time(speed, timeNeeded, Stop, TRUE)
+    timeNeeded = getTimeToDestinationInMS(distanceInMM, speed)
+    leftMotor.run_time(speed, timeNeeded, Stop, True)
+    rightMotor.run_time(speed, timeNeeded, Stop, True)
     return
 
 def moveUntilObstacle(speed, distToStopShort):
@@ -44,7 +41,7 @@ def moveUntilContact(speed):
 
     leftMotor.run(speed)
     rightMotor.run(speed)
-    while (TRUE):
+    while (True):
         if touchSensor.pressed:
             break
     return
@@ -56,6 +53,6 @@ def getCircumference():
 
 def getTimeToDestinationInMS(distance, speed):
     revolutions = distance / getCircumference()
-    return truncate(revolutions * 360 / (speed)) * 1000
+    return trunc(revolutions * 360 / (speed)) * 1000
 
     
