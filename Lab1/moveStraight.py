@@ -54,8 +54,8 @@ def moveUntilContact(speed):
 def getCircumference():
     LARGE_WHEEL_DIAMETER_MM = 56
 
-def getTimeToDestination(distance, speed):
+def getTimeToDestinationInMS(distance, speed):
     revolutions = distance / getCircumference()
-    return truncate(revolutions * 360 / speed)
+    return truncate(revolutions * 360 / (speed)) * 1000
 
     
