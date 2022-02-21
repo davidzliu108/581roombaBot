@@ -1,5 +1,6 @@
 from cmath import pi
 from curses import BUTTON1_CLICKED
+from os import truncate
 from pickle import FALSE, TRUE
 from pybricks.hubs import EV3Brick 
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor, 
@@ -55,6 +56,6 @@ def getCircumference():
 
 def getTimeToDestination(distance, speed):
     revolutions = distance / getCircumference()
-    return revolutions * 360 / speed
+    return truncate(revolutions * 360 / speed)
 
     
