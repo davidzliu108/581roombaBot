@@ -20,7 +20,7 @@ ev3 = EV3Brick()
 ev3.speaker.beep()
 
 speed = 10
-moveForDistance(speed, 10) # (distance in MM, speed deg/sec )
+moveForDistance(speed, 50) # (distance in MM, speed deg/sec )
 ev3.speaker.beep()
 
 while (TRUE): # pauses until button pressed
@@ -39,4 +39,4 @@ while (TRUE): # pauses until button pressed
             break
 
 moveUntilContact(speed / 2)
-moveForDistance(-speed, 10) # (distance in MM, speed deg/sec )
+moveForDistance(-speed, 50) # (distance in MM, speed deg/sec )
