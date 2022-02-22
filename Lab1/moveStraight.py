@@ -7,7 +7,7 @@ from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from pybricks.tools import *
 import math
-#from constants import LARGE_WHEEL_DIAMETER_MM
+from constants import LARGE_WHEEL_DIAMETER_IN_MM
 
 def moveForDistance(speed, distanceInMM): 
     direction = Direction.CLOCKWISE
@@ -74,8 +74,7 @@ def moveUntilContact(speed):
 
 
 def getCircumference():
-    LARGE_WHEEL_DIAMETER_MM = 56
-    return LARGE_WHEEL_DIAMETER_MM * math.pi
+    return LARGE_WHEEL_DIAMETER_IN_MM * math.pi
 
 def getTimeToDestinationInMS(distance, speed):
     revolutions = distance / getCircumference()
