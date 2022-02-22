@@ -10,41 +10,65 @@ import math
 #from constants import LARGE_WHEEL_DIAMETER_MM
 
 def moveForDistance(speed, distanceInMM): 
+    direction = Direction.CLOCKWISE
+    if (speed < 0):
+        speed *= -1
+        direction = Direction.COUNTERCLOCKWISE
+
     ev3 = EV3Brick()
-    print("test")
-    leftMotor = Motor(Port.A)
-    rightMotor = Motor(Port.D)
+    leftMotor = Motor(Port.A, direction)
+    rightMotor = Motor(Port.D,  direction)
 
     timeNeeded = getTimeToDestinationInMS(distanceInMM, speed)
-    leftMotor.run_time(speed, timeNeeded, Stop.BRAKE, False)
-    rightMotor.run_time(speed, timeNeeded, Stop.BRAKE, False)
+    """
+    print(timeNeeded)
+    leftMotor.run(speed)
+    rightMotor.run(speed)
+    wait(timeNeeded)
+    print("stopping")
+    leftMotor.hold
+    rightMotor.hold
+    """
+    leftMotor.run_time(speed, timeNeeded, Stop.COAST, False)
+    rightMotor.run_time(speed, timeNeeded, Stop.COAST, True)
     return
 
 def moveUntilObstacle(speed, distToStopShort):
+    print("test Move sensor")
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
-    rightMotor = Motor(Port.B)
-    sonar = UltrasonicSensor(Port.C)
-
-    distance = sonar.distance
-    while (sonar.distance > distToStopShort):
-        distance = sonar.distance
+    rightMotor = Motor(Port.D)
+    sonar = UltrasonicSensor(Port.S2)
     
-    leftMotor.hold
-    rightMotor.hold
+    leftMotor.run(speed)
+    rightMotor.run(speed)
+    distance = sonar.distance(False)
+    while (distance > distToStopShort):
+        distance = sonar.distance(False)
+        #print(distance)
+    
+    print("Stopping")
+    leftMotor.hold()
+    rightMotor.hold()
     return
 
 def moveUntilContact(speed):
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
-    rightMotor = Motor(Port.B)
-    touchSensor = TouchSensor(Port.C)
+    rightMotor = Motor(Port.D)
+    touchSensor = TouchSensor(Port.S1)
 
     leftMotor.run(speed)
     rightMotor.run(speed)
-    while (True):
-        if touchSensor.pressed:
+    paused = True
+    while (paused):
+        if touchSensor.pressed() == True:
+            paused = False
             break
+    
+    leftMotor.hold()
+    rightMotor.hold()
+    wait(1000)
     return
 
 

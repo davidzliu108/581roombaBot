@@ -18,21 +18,23 @@ ev3 = EV3Brick()
 # Write your program here.
 #ev3.speaker.beep()
 
-speed = 50
-moveForDistance(speed, 50) # (distance in MM, speed deg/sec )
-#ev3.speaker.beep()
-"""
-paused = True
-while (paused): # pauses until button pressed
-    pressed = ev3.buttons.pressed()
-    for button in pressed:
-        if (button == button.CENTER):
-            paused = False
-            break
-
-#moveUntilObstacle(speed, 500)
+speed = 100
+moveForDistance(speed, 1200) # (distance in MM, speed deg/sec )
 ev3.speaker.beep()
-"""
+wait(500)
+waitToMoveSensor = True
+while (waitToMoveSensor): # pauses until button pressed
+    pressed = ev3.buttons.pressed()
+    for button in pressed:
+        if (button == button.CENTER):
+            waitToMoveSensor = False
+            print("pressed")
+            break
+
+print("Starting...")
+moveUntilObstacle(speed, 500)
+ev3.speaker.beep()
+
 paused = True
 while (paused): # pauses until button pressed
     pressed = ev3.buttons.pressed()
@@ -41,5 +43,6 @@ while (paused): # pauses until button pressed
             paused = False
             break
 
-#moveUntilContact(speed / 2)
-moveForDistance(-1 * speed, 50) # (distance in MM, speed deg/sec )
+moveUntilContact(speed / 2)
+print("Post Contact")
+moveForDistance(-speed, 500) # (distance in MM, speed deg/sec )
