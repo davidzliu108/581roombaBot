@@ -8,6 +8,8 @@ from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from enum import Enum
+from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS
+from helperFunctions import waitForCenterButton
 
 
 # This program requires LEGO EV3 MicroPython v2.0 or higher.
@@ -26,19 +28,54 @@ class State(Enum):
     end = 5 # stop, done
 
 state = State.start
-while state != State.end:
-    if state == State.start:
-        print("do something")
-    elif state == State.startStop:
-        print("do something")
-    elif state == State.forward:
-        print("do something")
-    elif state == State.forwardBump:
-        print("do something")
-    elif state == State.forwardDistance:
-        print("do something")
-    elif state == State.end:
-        print("do something")
 
+speed = 300
+
+
+
+
+def start(speed):
+    moveUntilContact(speed/2)
+    return
+
+def forward(speed, distanceInMM):
+    ev3 = EV3Brick()
+    leftMotor = Motor(Port.A)
+    rightMotor = Motor(Port.D)
+    touchSensor = TouchSensor(Port.S1)
+
+    timeNeeded = getTimeToDestinationInMS(distanceInMM, speed)
+
+    leftMotor.run_time(speed, timeNeeded, Stop.COAST, False)
+    rightMotor.run_time(speed, timeNeeded, Stop.COAST, True)
+
+    notReached = True
+    while (notReached):
+        if touchSensor.pressed() == True:
+            notReached = False
+            leftMotor.hold()
+            rightMotor.hold()
+            return
+    return
+
+#def forwardDistance()
+
+
+
+while state != State.end:
+    if state == State.start: #david
+        print("do something")
+        moveUntilContact(speed/2)
+    elif state == State.startStop: #cody
+        print("do something")
+    elif state == State.forward: #david
+        print("do something")
+        forward(speed, 2000)
+    elif state == State.forwardBump: #cody
+        print("do something")
+    elif state == State.forwardDistance: #david
+        print("do something")
+    elif state == State.end: #cody
+        print("do something") 
 
 
