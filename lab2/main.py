@@ -1,5 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-from unittest import case
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -7,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from enum import Enum
+from turn import turnInPlace
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS
 from helperFunctions import waitForCenterButton
 
@@ -19,7 +18,8 @@ from helperFunctions import waitForCenterButton
 # Create your objects here.
 ev3 = EV3Brick()
 
-class State(Enum):
+"""
+class State(enum.Enum):    
     start = 0 # drive forward until wall
     startStop = 1 # after contact with wall, back up and turn 90deg (?) to right
     forward = 2 # drive foward until complete distance, bump wall, or distance exceeds threshold (20cm?)
@@ -28,7 +28,7 @@ class State(Enum):
     end = 5 # stop, done
 
 state = State.start
-
+"""
 speed = 300
 
 
@@ -60,22 +60,41 @@ def forward(speed, distanceInMM):
 
 #def forwardDistance()
 
+def startStop():
+    moveForDistance(-1 * speed, 50, True)
+    turnInPlace(speed/2, 90)
+    return 2
+
+def forwardBump():
+    moveForDistance(-1 * speed, 50, True)
+    turnInPlace(speed/2, 30)
 
 
-while state != State.end:
-    if state == State.start: #david
+state = 0
+while state != 5:
+    if state == 0: #david   
+        # start
+        start(speed)
+        nextState = 1
+    elif state == 1: #cody
+        # startStop
+        wait(500)
+        nextState = startStop()
+        nextState = 3
+    elif state == 2: #david
+        # forward
         print("do something")
-        moveUntilContact(speed/2)
-    elif state == State.startStop: #cody
+        #forward(speed, 2000)
+    elif state == 3: #cody
+        # forwardBump
+        waitForCenterButton()
+        forwardBump()
+    elif state == 4: #david
+        # forwardDistance
         print("do something")
-    elif state == State.forward: #david
+    elif state == 5: #cody
+        # end
         print("do something")
-        forward(speed, 2000)
-    elif state == State.forwardBump: #cody
-        print("do something")
-    elif state == State.forwardDistance: #david
-        print("do something")
-    elif state == State.end: #cody
-        print("do something") 
+    state = nextState
 
 

@@ -56,20 +56,18 @@ def moveUntilContact(speed):
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
-    touchSensor = TouchSensor(Port.S1)
+    touchSensorFront = TouchSensor(Port.S1)
+    touchSensorCorner = TouchSensor(Port.S3)
 
     leftMotor.run(speed)
     rightMotor.run(speed)
     paused = True
     while (paused):
-        if touchSensor.pressed() == True:
-            paused = False
-            break
-    
-    leftMotor.hold()
-    rightMotor.hold()
-    wait(1000)
-    return
+        if touchSensorFront.pressed() == True:
+            leftMotor.hold()
+            rightMotor.hold()
+            wait(1000)
+            return
 
 
 
