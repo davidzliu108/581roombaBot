@@ -13,7 +13,7 @@ from moveStraight import getCircumference
 
 def getTimeToTurnInMSFromDeg(deg, speed):
     revolution = deg / 360
-    botDiameterInMM = 132
+    botDiameterInMM = 135
     distance = botDiameterInMM * math.pi * revolution
     print("Distance: " + str(distance))
     revolutions = distance / getCircumference()

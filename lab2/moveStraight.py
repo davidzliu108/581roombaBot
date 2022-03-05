@@ -21,7 +21,7 @@ def moveForDistance(speed, distanceInMM, wait):
 
     timeNeeded = getTimeToDestinationInMS(distanceInMM, speed)
     leftMotor.run_time(speed, timeNeeded, Stop.HOLD, False)
-    rightMotor.run_time(speed, timeNeeded, Stop.Hold, wait)
+    rightMotor.run_time(speed, timeNeeded, Stop.HOLD, wait)
     return
 
 def moveUntilObstacle(speed, distToStopShort):

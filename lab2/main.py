@@ -29,29 +29,30 @@ class State(enum.Enum):
 
 state = State.start
 """
-speed = 300
+speed = 200
 
 
 
 
 def start(speed):
-    moveUntilContact(speed/2)
+    moveUntilContact(speed)
     return
 
 def forward(speed, distanceInMM):
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
-    touchSensor = TouchSensor(Port.S1)
+    touchSensorFront = TouchSensor(Port.S1)
+    touchSensorCorner = TouchSensor(Port.S3)
 
     timeNeeded = getTimeToDestinationInMS(distanceInMM, speed)
 
     leftMotor.run_time(speed, timeNeeded, Stop.COAST, False)
-    rightMotor.run_time(speed, timeNeeded, Stop.COAST, True)
+    rightMotor.run_time(speed, timeNeeded, Stop.COAST, False)
 
     notReached = True
     while (notReached):
-        if touchSensor.pressed() == True:
+        if touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True:
             notReached = False
             leftMotor.hold()
             rightMotor.hold()
@@ -62,12 +63,13 @@ def forward(speed, distanceInMM):
 
 def startStop():
     moveForDistance(-1 * speed, 50, True)
-    turnInPlace(speed/2, 90)
+    turnInPlace(speed, 90)
     return 2
 
 def forwardBump():
     moveForDistance(-1 * speed, 50, True)
-    turnInPlace(speed/2, 30)
+    wait(500)
+    turnInPlace(speed, 35)
 
 
 state = 0
@@ -80,15 +82,16 @@ while state != 5:
         # startStop
         wait(500)
         nextState = startStop()
-        nextState = 3
+        nextState = 2
     elif state == 2: #david
         # forward
         print("do something")
-        #forward(speed, 2000)
+        forward(speed, 2000)
+        nextState = 3
     elif state == 3: #cody
         # forwardBump
-        waitForCenterButton()
         forwardBump()
+        nextState = 2
     elif state == 4: #david
         # forwardDistance
         print("do something")
