@@ -9,6 +9,12 @@ from pybricks.tools import *
 import math
 from constants import LARGE_WHEEL_DIAMETER_IN_MM
 
+def stop():
+    leftMotor = Motor(Port.A)
+    rightMotor = Motor(Port.D)
+    leftMotor.hold()
+    rightMotor.hold()
+
 def moveForDistance(speed, distanceInMM, wait): 
     direction = Direction.CLOCKWISE
     if (speed < 0):
@@ -70,5 +76,10 @@ def getCircumference():
 def getTimeToDestinationInMS(distance, speed):
     revolutions = distance / getCircumference()
     return math.trunc((revolutions * 360 / (speed)) * 1000)
+
+def getDistanceTraveled(speed, time):
+    degreesTraveled = speed * time / 1000
+    revolutions = degreesTraveled / 360
+    return getCircumference() * revolutions
 
     

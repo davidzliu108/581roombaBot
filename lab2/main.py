@@ -7,7 +7,7 @@ from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from turn import turnInPlace, leftCorrect
-from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS
+from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
 from helperFunctions import waitForCenterButton
 
 
@@ -29,10 +29,20 @@ class State(enum.Enum):
 
 state = State.start
 """
+
+distanceRemaining = 2000
 speed = 200
+watch = StopWatch()
 
 
+def resetAndStartWatch():
+    watch.reset()
+    watch.resume()
 
+def getDeltaTime():
+    time = watch.time()
+    watch.reset()
+    return time
 
 def start(speed):
     moveUntilContact(speed)
@@ -49,9 +59,10 @@ def forward(speed, distanceInMM):
 
     leftMotor.run_time(speed, timeNeeded, Stop.COAST, False)
     rightMotor.run_time(speed, timeNeeded, Stop.COAST, False)
-
     notReached = True
+    resetAndStartWatch()
     while (notReached):
+        distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
         if touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True:
             notReached = False
             leftMotor.hold()
@@ -73,29 +84,29 @@ def forwardDistance(bound):
 
 def startStop():
     moveForDistance(-1 * speed, 50, True)
+    distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(50, speed))
     turnInPlace(speed, 90)
     return 2
 
 def forwardBump():
     moveForDistance(-1 * speed, 50, True)
+    distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(50, speed))
     wait(500)
     turnInPlace(speed, 35)
 
-
 state = 0
-while state != 5:
+while state != 6:
     if state == 0: #david   
         # start
         start(speed)
         nextState = 1
     elif state == 1: #cody
         # startStop
-        wait(500)
+        wait(200)
         nextState = startStop()
         nextState = 2
     elif state == 2: #david
         # forward
-        print("do something")
         forward(speed, 2000)
         nextState = 3
     elif state == 3: #cody
@@ -106,10 +117,15 @@ while state != 5:
         # forwardDistance
         forwardDistance(290)
         nextState = 2
-        print("do something")
     elif state == 5: #cody
+        # forwardProximity == too close to wall
+        stop()
+        turnInPlace(speed, 15)
+        nextState = 2
+    elif state == 6: #cody
         # end
-        print("do something")
+        stop()
+        print("Finished!")
     state = nextState
 
 
