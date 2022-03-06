@@ -53,15 +53,15 @@ def forward(speed, distanceInMM):
     touchSensorCorner = TouchSensor(Port.S3)
 
     #timeNeeded = getTimeToDestinationInMS(distanceRemaining, speed)
-    print(distanceRemaining)
     leftMotor.run(speed)
     rightMotor.run(speed)
     notReached = True
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
     innerBound = 60
-    outerBound = 200
+    outerBound = 150
     while (notReached):
+        wait(100)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
         if distanceRemaining <= 0:
             notReached = False
@@ -70,28 +70,12 @@ def forward(speed, distanceInMM):
             notReached = False
             stop()
             return 3
-        if (sonar.distance(False) > outerBound): # too far away
+        if (sonar.distance() >= outerBound): # too far away
             stop()
             return 4
         if (sonar.distance() < innerBound): # too close
             stop()
             return 5
-    return
-
-def forwardDistance(bound):
-    ev3 = EV3Brick()
-    sonar = UltrasonicSensor(Port.S2)
-
-    global distanceRemaining
-    distance = sonar.distance(False)
-    turnInPlace(speed, -35)
-    resetAndStartWatch()
-    moveForDistance(speed, distanceRemaining, False)
-    while (sonar.distance(False) > bound or distanceRemaining <= 0) :       
-        distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
-    
-    distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
-    stop()
     return
 
 def startStop():
@@ -107,6 +91,64 @@ def forwardBump():
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     wait(200)
     turnInPlace(speed, 35)
+
+def forwardProximity():
+    global distanceRemaining
+    stop()
+    sonar = UltrasonicSensor(Port.S2)
+    innerBounds = 60
+    resetAndStartWatch()
+    while (sonar.distance() < innerBounds and distanceRemaining > 0):
+        turnInPlace(speed, 15)
+        moveForDistance(speed, 80, True)
+        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+    return
+
+def forwardDistance():
+    touchSensorFront = TouchSensor(Port.S1)
+    touchSensorCorner = TouchSensor(Port.S3)
+    global distanceRemaining
+    stop()
+    sonar = UltrasonicSensor(Port.S2)
+    outerbounds = 150
+    resetAndStartWatch()
+    print("Moving left!!")
+    distance = sonar.distance()
+    prevDistance = 0
+    while (distance > outerbounds and distanceRemaining > 0):
+        print("Prev: " + str(prevDistance))
+        print("Dist: " + str(distance))
+        if distance > prevDistance:
+            turnInPlace(speed, -25)
+        if distance > 2000:
+            return 2
+        if (touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True):
+            stop()
+            return 3
+        moveForDistance(speed, 80, True)
+        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+        prevDistance = distance
+        distance = sonar.distance()
+    return 2
+    '''
+    ev3 = EV3Brick()
+    sonar = UltrasonicSensor(Port.S2)
+
+    global distanceRemaining
+    resetAndStartWatch()
+    print("Turning left")
+    while (sonar.distance() > outerBound or distanceRemaining <= 0):
+        print(sonar.distance())
+        turnInPlace(speed, -25)
+        moveForDistance(speed, 50, True)       
+        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+        if (sonar.distance(False) <= outerBound):
+            stop()
+            return 2
+    stop()
+    return 2
+    '''
+
 
 state = 0
 speed = 200
@@ -134,12 +176,10 @@ while state != 6:
         nextState = 2
     elif state == 4: #david
         # forwardDistance
-        forwardDistance(200)
-        nextState = 2
+        nextState = forwardDistance()
     elif state == 5: #cody
         # forwardProximity == too close to wall
-        stop()
-        turnInPlace(speed, 15)
+        forwardProximity()
         nextState = 2
     elif state == 6: #cody
         # end

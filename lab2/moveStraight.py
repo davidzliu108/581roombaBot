@@ -31,7 +31,6 @@ def moveForDistance(speed, distanceInMM, wait):
     return
 
 def moveUntilObstacle(speed, distToStopShort):
-    print("test Move sensor")
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)

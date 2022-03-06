@@ -15,10 +15,8 @@ def getTimeToTurnInMSFromDeg(deg, speed):
     revolution = deg / 360
     botDiameterInMM = 133.35
     distance = botDiameterInMM * math.pi * revolution
-    print("Distance: " + str(distance))
     revolutions = distance / getCircumference()
     time = math.trunc((revolutions * 360 / (speed)) * 1000)
-    print("Time: " + str(time))
     return time
 
 
