@@ -31,3 +31,11 @@ def turnInPlace(speed, deg):
     rightMotor.run_time(speed, timeNeeded, Stop.HOLD, True)
     return
 
+def leftCorrect(speed, deg):
+    ev3 = EV3Brick()
+    leftMotor = Motor(Port.A, Direction.COUNTERCLOCKWISE)
+    rightMotor = Motor(Port.D,  Direction.CLOCKWISE)
+    timeNeeded = getTimeToTurnInMSFromDeg(deg, speed)
+    leftMotor.run_time(speed, timeNeeded, Stop.HOLD, False)
+    rightMotor.run_time(speed, timeNeeded, Stop.HOLD, True)
+    return

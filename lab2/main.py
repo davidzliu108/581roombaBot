@@ -6,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from turn import turnInPlace
+from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS
 from helperFunctions import waitForCenterButton
 
@@ -59,7 +59,17 @@ def forward(speed, distanceInMM):
             return
     return
 
-#def forwardDistance()
+def forwardDistance(bound):
+    ev3 = EV3Brick()
+    sonar = UltrasonicSensor(Port.S2)
+
+    distance = sonar.distance(False)
+
+    while (distance > bound) :
+        moveForDistance(-1 * speed, 50, True)
+        leftCorrect(speed, 90)
+        return
+    return
 
 def startStop():
     moveForDistance(-1 * speed, 50, True)
@@ -94,6 +104,8 @@ while state != 5:
         nextState = 2
     elif state == 4: #david
         # forwardDistance
+        forwardDistance(290)
+        nextState = 2
         print("do something")
     elif state == 5: #cody
         # end
