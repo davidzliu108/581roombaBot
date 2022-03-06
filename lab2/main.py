@@ -59,6 +59,7 @@ def forward(speed, distanceInMM):
     notReached = True
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
+    outerBound = 200
     while (notReached):
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
         if distanceRemaining <= 0:
@@ -68,8 +69,10 @@ def forward(speed, distanceInMM):
             notReached = False
             stop()
             return 3
-        if (): # too far away
+        if (sonar.distance(False) > outerBound): # too far away
             # do something
+            stop()
+            return 4
         if (): # too close
             # do something
     return
