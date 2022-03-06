@@ -58,6 +58,7 @@ def forward(speed, distanceInMM):
     rightMotor.run(speed)
     notReached = True
     resetAndStartWatch()
+    sonar = UltrasonicSensor(Port.S2)
     while (notReached):
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
         if distanceRemaining <= 0:
@@ -65,9 +66,12 @@ def forward(speed, distanceInMM):
             return 6
         if touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True:
             notReached = False
-            leftMotor.hold()
-            rightMotor.hold()
+            stop()
             return 3
+        if (): # too far away
+            # do something
+        if (): # too close
+            # do something
     return
 
 def forwardDistance(bound):
@@ -106,7 +110,6 @@ watch = StopWatch()
 distanceRemaining = 2000
 
 sonar = UltrasonicSensor(Port.S2)
-
 
 while state != 6:
     if state == 0: #david   
