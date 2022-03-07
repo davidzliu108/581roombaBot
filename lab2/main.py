@@ -60,8 +60,8 @@ def forward(speed, distanceInMM):
     notReached = True
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
-    innerBound = 80
-    outerBound = 100
+    innerBound = 70
+    outerBound = 110
     while (notReached):
         wait(100)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
@@ -81,7 +81,7 @@ def forward(speed, distanceInMM):
     return
 
 def startStop():
-    moveForDistance(-1 * speed, 90, True)
+    moveForDistance(-1 * speed, 80, True)
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     turnInPlace(speed, 90)
@@ -98,26 +98,40 @@ def forwardProximity():
     global distanceRemaining
     stop()
     sonar = UltrasonicSensor(Port.S2)
-    innerBounds = 80
+    touchSensorFront = TouchSensor(Port.S1)
+    touchSensorCorner = TouchSensor(Port.S3)
+    innerBounds = 75
     resetAndStartWatch()
     startDistance = sonar.distance()
     distance = sonar.distance()
     while (distance < innerBounds and distanceRemaining > 0):
         print("Start: " + str(startDistance))
         print("Curr: " + str(distance))
+        if (touchSensorCorner.pressed() == True):
+            stop()
+            turnInPlace(speed, 25)
+            return 3
+        if (touchSensorFront.pressed() == True):
+            turnInPlace(speed, 50)
         if distance >= startDistance:
-            if distance < 70:
+            if distance < 65:
                 print("sharp right")
-                turnInPlace(speed, 30)
+                turnInPlace(speed, 25)
             else:
                 print("right")
-                turnInPlace(speed, 15)        
+                turnInPlace(speed, 17)        
         else:
-            return
-        moveForDistance(speed, 80, True)
-        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+            return 2
+        moveForDistance(speed, 100, True)
+        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(100, speed))
         distance = sonar.distance()
-    return
+    return 2
+
+def setTurnAmount(turnAmount, totalTurnAmount):
+    newTurnTotal = turnAmount + totalTurnAmount
+    newTurnTotal = max(newTurnTotal, -75)
+    return newTurnTotal - totalTurnAmount
+    
 
 def forwardDistance():
     touchSensorFront = TouchSensor(Port.S1)
@@ -130,23 +144,38 @@ def forwardDistance():
     print("Turning left!!")
     distance = sonar.distance()
     startDistance = distance
+    totalTurnAngle = 0
     while (distance > outerbounds and distanceRemaining > 0):
-        if (touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True):
+        if (touchSensorCorner.pressed() == True):
             stop()
+            turnAmount = setTurnAmount(35, totalTurnAngle)
+            totalTurnAngle += turnAmount
+            turnInPlace(speed, turnAmount)
             return 3
-        print(distance)
-        if distance >=  startDistance:
-            if (distance > 150 and distance < 1000):
-                turnInPlace(speed, -25)
+        elif (touchSensorFront.pressed() == True):
+            turnAmount = setTurnAmount(50, totalTurnAngle)
+            totalTurnAngle += turnAmount
+            turnInPlace(speed, turnAmount)
+        elif distance >=  startDistance:
+            if (distance > 125 and distance < 2000):
+                turnAmount = setTurnAmount(-50, totalTurnAngle)
+                totalTurnAngle += turnAmount
+                turnInPlace(speed, turnAmount)
+            elif(distance > 110 and distance < 2000):
+                turnAmount = setTurnAmount(-35, totalTurnAngle)
+                totalTurnAngle += turnAmount
+                turnInPlace(speed, turnAmount)
             else:
-                turnInPlace(speed, -15)
+                turnAmount = setTurnAmount(-20, totalTurnAngle)
+                totalTurnAngle += turnAmount
+                turnInPlace(speed, turnAmount)
         else:
             return 2
         if distance > 2000:
            moveForDistance(speed, 100, True)
-           distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
-        moveForDistance(speed, 150, True)
-        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+           distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(100, speed))
+        moveForDistance(speed, 200, True)
+        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(200, speed))
         distance = sonar.distance()
     return 2
     '''
@@ -176,9 +205,11 @@ distanceRemaining = 2000
 
 sonar = UltrasonicSensor(Port.S2)
 
-while state != 6:
+inProgress = True
+while inProgress:
     if state == 0: #david   
         # start
+        waitForCenterButton()
         start(speed)
         nextState = 1
     elif state == 1: #cody
@@ -198,13 +229,14 @@ while state != 6:
         nextState = forwardDistance()
     elif state == 5: #cody
         # forwardProximity == too close to wall
-        forwardProximity()
-        nextState = 2
+        nextState = forwardProximity()
     elif state == 6: #cody
         # end
         stop()
+        inProgress = False
         ev3.speaker.beep()
         print("Finished!")
+        
     state = nextState
 
 

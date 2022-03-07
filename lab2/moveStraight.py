@@ -53,7 +53,7 @@ def moveUntilContact(speed):
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     touchSensorFront = TouchSensor(Port.S1)
-    touchSensorCorner = TouchSensor(Port.S2)
+    touchSensorCorner = TouchSensor(Port.S3)
 
     leftMotor.run(speed)
     rightMotor.run(speed)
