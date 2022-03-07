@@ -67,7 +67,7 @@ def forward(speed, distanceInMM):
             notReached = False
             return 6
         if touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True:
-            notReached = False
+            notReached = True
             stop()
             return 3
         if (sonar.distance() >= outerBound): # too far away
@@ -76,7 +76,7 @@ def forward(speed, distanceInMM):
         if (sonar.distance() < innerBound): # too close
             stop()
             return 5
-    return
+    return 6
 
 def startStop():
     moveForDistance(-1 * speed, 50, True)
