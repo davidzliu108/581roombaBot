@@ -46,6 +46,8 @@ def start(speed):
 
 def forward(speed, distanceInMM):
     global distanceRemaining
+    if distanceRemaining <= 0:
+        return 6
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
@@ -58,8 +60,8 @@ def forward(speed, distanceInMM):
     notReached = True
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
-    innerBound = 60
-    outerBound = 150
+    innerBound = 80
+    outerBound = 100
     while (notReached):
         wait(100)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
@@ -79,7 +81,7 @@ def forward(speed, distanceInMM):
     return
 
 def startStop():
-    moveForDistance(-1 * speed, 50, True)
+    moveForDistance(-1 * speed, 90, True)
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     turnInPlace(speed, 90)
@@ -96,12 +98,25 @@ def forwardProximity():
     global distanceRemaining
     stop()
     sonar = UltrasonicSensor(Port.S2)
-    innerBounds = 60
+    innerBounds = 80
     resetAndStartWatch()
-    while (sonar.distance() < innerBounds and distanceRemaining > 0):
-        turnInPlace(speed, 15)
+    startDistance = sonar.distance()
+    distance = sonar.distance()
+    while (distance < innerBounds and distanceRemaining > 0):
+        print("Start: " + str(startDistance))
+        print("Curr: " + str(distance))
+        if distance >= startDistance:
+            if distance < 70:
+                print("sharp right")
+                turnInPlace(speed, 30)
+            else:
+                print("right")
+                turnInPlace(speed, 15)        
+        else:
+            return
         moveForDistance(speed, 80, True)
         distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+        distance = sonar.distance()
     return
 
 def forwardDistance():
@@ -110,24 +125,28 @@ def forwardDistance():
     global distanceRemaining
     stop()
     sonar = UltrasonicSensor(Port.S2)
-    outerbounds = 150
+    outerbounds = 100
     resetAndStartWatch()
-    print("Moving left!!")
+    print("Turning left!!")
     distance = sonar.distance()
-    prevDistance = 0
+    startDistance = distance
     while (distance > outerbounds and distanceRemaining > 0):
-        print("Prev: " + str(prevDistance))
-        print("Dist: " + str(distance))
-        if distance > prevDistance:
-            turnInPlace(speed, -25)
-        if distance > 2000:
-            return 2
         if (touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True):
             stop()
             return 3
-        moveForDistance(speed, 80, True)
+        print(distance)
+        if distance >=  startDistance:
+            if (distance > 150 and distance < 1000):
+                turnInPlace(speed, -25)
+            else:
+                turnInPlace(speed, -15)
+        else:
+            return 2
+        if distance > 2000:
+           moveForDistance(speed, 100, True)
+           distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
+        moveForDistance(speed, 150, True)
         distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
-        prevDistance = distance
         distance = sonar.distance()
     return 2
     '''
@@ -164,7 +183,7 @@ while state != 6:
         nextState = 1
     elif state == 1: #cody
         # startStop
-        wait(200)
+        wait(100)
         startStop()
         nextState = 2
     elif state == 2: #david
@@ -184,6 +203,7 @@ while state != 6:
     elif state == 6: #cody
         # end
         stop()
+        ev3.speaker.beep()
         print("Finished!")
     state = nextState
 
