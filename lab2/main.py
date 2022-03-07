@@ -48,7 +48,7 @@ def start(speed):
     return
 
 def startStop():
-    moveForDistance(-1 * speed, 70, True)
+    moveForDistance(-1 * speed, 60, True)
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     turnInPlace(speed, 90)
