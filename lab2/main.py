@@ -21,7 +21,7 @@ from helperFunctions import waitForCenterButton
 # Create your objects here.
 ev3 = EV3Brick()
 
-"""
+"""s
 class State(enum.Enum):    
     start = 0 # drive forward until wall
     startStop = 1 # after contact with wall, back up and turn 90deg (?) to right
@@ -45,6 +45,13 @@ def getDeltaTime():
 
 def start(speed):
     moveUntilContact(speed)
+    return
+
+def startStop():
+    moveForDistance(-1 * speed, 60, True)
+    global distanceRemaining
+    distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
+    turnInPlace(speed, 90)
     return
 
 def forward(speed, distanceInMM):
