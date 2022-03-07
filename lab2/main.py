@@ -184,6 +184,7 @@ while state != 6:
     elif state == 6: #cody
         # end
         stop()
+        ev3.speaker.beep()
         print("Finished!")
     state = nextState
 
