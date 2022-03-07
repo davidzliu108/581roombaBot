@@ -157,7 +157,8 @@ distanceRemaining = 2000
 
 sonar = UltrasonicSensor(Port.S2)
 
-while state != 6:
+inProgress = True
+while inProgress:
     if state == 0: #david   
         # start
         start(speed)
@@ -185,6 +186,7 @@ while state != 6:
         # end
         stop()
         ev3.speaker.beep()
+        inProgress = False
         print("Finished!")
     state = nextState
 
