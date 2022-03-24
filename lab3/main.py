@@ -132,70 +132,26 @@ def setTurnAmount(turnAmount, totalTurnAmount):
 
 def forwardDistance():
     touchSensorFront = TouchSensor(Port.S1)
-    touchSensorCorner = TouchSensor(Port.S3)
     global distanceRemaining
     stop()
     sonar = UltrasonicSensor(Port.S2)
-    outerbounds = 75
+    idealDistance = 70
     resetAndStartWatch()
-    distance = sonar.distance()
-    startDistance = min(distance, 80)
-    totalTurnAngle = 0
-    while (distance > outerbounds and distanceRemaining > 0):
-        print(distance)
-        if (touchSensorCorner.pressed() == True):
-            stop()
-            turnAmount = setTurnAmount(45, totalTurnAngle)
-            totalTurnAngle += turnAmount
+    while (distanceRemaining > 0):
+        distanceFromWall = sonar.distance()
+        distanceFromWallDelta = idealDistance - distanceFromWall
+        if (touchSensorFront.pressed() == True):
+            turnAmount = 90
             turnInPlace(speed, turnAmount)
-            return 3
-        elif (touchSensorFront.pressed() == True):
-            turnAmount = setTurnAmount(70, totalTurnAngle)
-            totalTurnAngle += turnAmount
-            turnInPlace(speed, turnAmount)
-        elif distance >=  startDistance:
-            if (distance > 200 and distance < 2000):
-                turnAmount = setTurnAmount(-60, totalTurnAngle)
-                totalTurnAngle += turnAmount
-                turnInPlace(speed, turnAmount)
-            elif (distance > 90 and distance < 2000):
-                turnAmount = setTurnAmount(-50, totalTurnAngle)
-                totalTurnAngle += turnAmount
-                turnInPlace(speed, turnAmount)
-            elif(distance > 80 and distance < 2000):
-                turnAmount = setTurnAmount(-35, totalTurnAngle)
-                totalTurnAngle += turnAmount
-                turnInPlace(speed, turnAmount)
-            else:
-                turnAmount = setTurnAmount(-20, totalTurnAngle)
-                totalTurnAngle += turnAmount
-                turnInPlace(speed, turnAmount)
         else:
             return 2
-        if distance > 2000:
+        if distanceFromWall > 2000:
            moveForDistance(speed, 100, True)
            distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(100, speed))
-        moveForDistance(speed, 200, True)
+        moveForDistance(speed, 200, True, distanceFromWallDelta)
         distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(200, speed))
-        distance = sonar.distance()
+        distanceFromWall = sonar.distance()
     return 2
-    '''
-    ev3 = EV3Brick()
-    sonar = UltrasonicSensor(Port.S2)
-    global distanceRemaining
-    resetAndStartWatch()
-    print("Turning left")
-    while (sonar.distance() > outerBound or distanceRemaining <= 0):
-        print(sonar.distance())
-        turnInPlace(speed, -25)
-        moveForDistance(speed, 50, True)       
-        distanceRemaining -= getDistanceTraveled(speed, getTimeToDestinationInMS(80, speed))
-        if (sonar.distance(False) <= outerBound):
-            stop()
-            return 2
-    stop()
-    return 2
-    '''
 
 
 state = 0
