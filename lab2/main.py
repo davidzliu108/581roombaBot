@@ -18,7 +18,7 @@ from helperFunctions import waitForCenterButton
 # Create your objects here.
 ev3 = EV3Brick()
 
-"""
+"""s
 class State(enum.Enum):    
     start = 0 # drive forward until wall
     startStop = 1 # after contact with wall, back up and turn 90deg (?) to right
@@ -60,13 +60,14 @@ def forward(speed, distanceInMM):
     touchSensorFront = TouchSensor(Port.S1)
     touchSensorCorner = TouchSensor(Port.S3)
 
+    #timeNeeded = getTimeToDestinationInMS(distanceRemaining, speed)
     leftMotor.run(speed)
     rightMotor.run(speed)
     notReached = True
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
-    innerBound = 50
-    outerBound = 75
+    innerBound = 60
+    outerBound = 95
     while (notReached):
         wait(100)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
@@ -77,12 +78,19 @@ def forward(speed, distanceInMM):
             notReached = False
             stop()
             return 3
-        if (sonar.distance() >= outerBound and sonar.distance() < 1000): # too far away
+        if (sonar.distance() >= outerBound and sonar.distance() < 2000): # too far away
             stop()
             return 4
         if (sonar.distance() < innerBound): # too close
             stop()
             return 5
+    return
+
+def startStop():
+    moveForDistance(-1 * speed, 80, True)
+    global distanceRemaining
+    distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
+    turnInPlace(speed, 90)
     return
 
 def forwardBump():
@@ -98,7 +106,7 @@ def forwardProximity():
     sonar = UltrasonicSensor(Port.S2)
     touchSensorFront = TouchSensor(Port.S1)
     touchSensorCorner = TouchSensor(Port.S3)
-    innerBounds = 50
+    innerBounds = 60
     resetAndStartWatch()
     startDistance = sonar.distance()
     distance = sonar.distance()
@@ -107,13 +115,13 @@ def forwardProximity():
             stop()
             distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
             moveForDistance(-1 * speed, 50, True)
-            turnInPlace(speed, 35)
+            turnInPlace(speed, 25)
         if (touchSensorFront.pressed() == True):
             distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
             moveForDistance(-1 * speed, 50, True)
             turnInPlace(speed, 50)
         if distance >= startDistance:
-            if distance > 55:
+            if distance > 65:
                 turnInPlace(speed, 25)
             else:
                 turnInPlace(speed, 17)        
@@ -126,7 +134,7 @@ def forwardProximity():
 
 def setTurnAmount(turnAmount, totalTurnAmount):
     newTurnTotal = turnAmount + totalTurnAmount
-    newTurnTotal = max(newTurnTotal, -85)
+    newTurnTotal = max(newTurnTotal, -75)
     return newTurnTotal - totalTurnAmount
     
 
@@ -136,33 +144,28 @@ def forwardDistance():
     global distanceRemaining
     stop()
     sonar = UltrasonicSensor(Port.S2)
-    outerbounds = 75
+    outerbounds = 95
     resetAndStartWatch()
     distance = sonar.distance()
-    startDistance = min(distance, 80)
+    startDistance = distance
     totalTurnAngle = 0
     while (distance > outerbounds and distanceRemaining > 0):
-        print(distance)
         if (touchSensorCorner.pressed() == True):
             stop()
-            turnAmount = setTurnAmount(45, totalTurnAngle)
+            turnAmount = setTurnAmount(35, totalTurnAngle)
             totalTurnAngle += turnAmount
             turnInPlace(speed, turnAmount)
             return 3
         elif (touchSensorFront.pressed() == True):
-            turnAmount = setTurnAmount(70, totalTurnAngle)
+            turnAmount = setTurnAmount(50, totalTurnAngle)
             totalTurnAngle += turnAmount
             turnInPlace(speed, turnAmount)
         elif distance >=  startDistance:
-            if (distance > 200 and distance < 2000):
-                turnAmount = setTurnAmount(-60, totalTurnAngle)
-                totalTurnAngle += turnAmount
-                turnInPlace(speed, turnAmount)
-            elif (distance > 90 and distance < 2000):
+            if (distance > 110 and distance < 2000):
                 turnAmount = setTurnAmount(-50, totalTurnAngle)
                 totalTurnAngle += turnAmount
                 turnInPlace(speed, turnAmount)
-            elif(distance > 80 and distance < 2000):
+            elif(distance > 105 and distance < 2000):
                 turnAmount = setTurnAmount(-35, totalTurnAngle)
                 totalTurnAngle += turnAmount
                 turnInPlace(speed, turnAmount)
