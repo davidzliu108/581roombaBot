@@ -52,13 +52,11 @@ def moveUntilContact(speed):
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     touchSensorFront = TouchSensor(Port.S1)
-    touchSensorCorner = TouchSensor(Port.S3)
-
     leftMotor.run(speed)
     rightMotor.run(speed)
     paused = True
     while (paused):
-        if touchSensorFront.pressed() == True or touchSensorCorner.pressed() == True:
+        if touchSensorFront.pressed() == True:
             paused = False
             break
     
