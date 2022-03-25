@@ -18,18 +18,6 @@ from helperFunctions import waitForCenterButton
 # Create your objects here.
 ev3 = EV3Brick()
 
-"""
-class State(enum.Enum):    
-    start = 0 # drive forward until wall
-    startStop = 1 # after contact with wall, back up and turn 90deg (?) to right
-    forward = 2 # drive foward until complete distance, bump wall, or distance exceeds threshold (20cm?)
-    forwardBump = 3 # back up slightly? turn right
-    forwardDistance = 4 # too far from wall, stop, turn left
-    end = 5 # stop, done
-state = State.start
-"""
-
-
 def resetAndStartWatch():
     watch.reset()
     watch.resume()
