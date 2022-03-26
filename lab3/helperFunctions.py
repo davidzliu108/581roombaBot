@@ -5,6 +5,7 @@ from math import sin, cos
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
 from pybricks.parameters import Port, Stop, Direction, Button, Color
+import math
 
 
 robotWidth = 136.525
@@ -44,3 +45,10 @@ def calculatePosition(currPosition, deltaTime):
     xPrime = (currPosition[0] - calculateICC(currPosition)[0]) * cos(calculateTheta(thetaPrime)) - (currPosition[1] - icc[1]) * sin(thetaPrime) + icc[0]
     yPrime = (currPosition[0] - calculateICC(currPosition)[0]) * sin(thetaPrime) + currPosition[1] - icc[1] * cos(thetaPrime) + icc[1]
     return Tuple(xPrime, yPrime, thetaPrime)
+
+def comparePosition(targetPosition, currPosition):
+    maxDistance = 100
+    distance = math.sqrt((targetPosition[0] - currPosition[0])**2 + (targetPosition[1] - currPosition[1])**2)
+    if (distance < maxDistance):
+        return True
+    return False
