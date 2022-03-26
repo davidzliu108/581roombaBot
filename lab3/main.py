@@ -47,7 +47,7 @@ def start(speed):
     watch.pause()
     deltaTime = watch.time()
     global traceStartPos, currPos
-    traceStartPos = calculatePosition(currPos, deltaTime/1000, speed, speed)
+    traceStartPos = calculatePosition(currPos, deltaTime / 1000, speed, speed)
     print(traceStartPos)
     return
 

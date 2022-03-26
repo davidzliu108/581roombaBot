@@ -28,26 +28,38 @@ def calculateR(leftSpeed, rightSpeed):
 
 
 def calculateICC(currPosition, leftSpeed, rightSpeed):
-    print("calculating ICC")
     r = calculateR(leftSpeed, rightSpeed)
     return (currPosition[0] - r * sin(currPosition[2]), currPosition[1] + r * cos(currPosition[2]))
 
-def calculateTheta(heading, deltaTime):
-    return heading + calculateW() * deltaTime
+def calculateTheta(heading, deltaTime, leftSpeed, rightSpeed):
+    return heading + calculateW(leftSpeed, rightSpeed) * deltaTime
 
-def calculateW():
-    ev3 = EV3Brick()
-    leftMotor = Motor(Port.A)
-    rightMotor = Motor(Port.D)
-    w = (rightMotor.speed()*radius - leftMotor.speed()*radius)/robotWidth
+def calculateW(leftSpeed, rightSpeed):
+    w = (rightSpeed*radius - leftSpeed*radius)/robotWidth
     return w
 
 def calculatePosition(currPosition, deltaTime, leftSpeed, rightSpeed):
     icc = calculateICC(currPosition, leftSpeed, rightSpeed)
-    thetaPrime = calculateTheta(currPosition[2], deltaTime)
+    print(icc)
+    thetaPrime = calculateTheta(currPosition[2], deltaTime, leftSpeed, rightSpeed)
+    print(thetaPrime)
+    if(leftSpeed == rightSpeed):
+        posPrime = calculatePositionWhenStraight(currPosition, leftSpeed, deltaTime)
+        print(posPrime)
+        return posPrime
     xPrime = (currPosition[0] - icc[0]) * cos(thetaPrime) - (currPosition[1] - icc[1]) * sin(thetaPrime) + icc[0]
-    yPrime = (currPosition[0] - icc[0]) * sin(thetaPrime) + currPosition[1] - icc[1] * cos(thetaPrime) + icc[1]
+    yPrime = (currPosition[0] - icc[0]) * sin(thetaPrime) + (currPosition[1] - icc[1]) * cos(thetaPrime) + icc[1]
+    print(xPrime)
+    print(yPrime)
     return (xPrime, yPrime, thetaPrime)
+
+def calculatePositionWhenStraight(currPosition, speed, deltaTime):
+    print("New Pos:")
+    print(speed)
+    print(deltaTime)
+    xPrime = currPosition[0] + speed * radius * cos(currPosition[2]) * deltaTime
+    yPrime = currPosition[1] + speed * radius * sin(currPosition[2]) * deltaTime
+    return (xPrime, yPrime, currPosition[2])
 
 def comparePosition(targetPosition, currPosition):
     maxDistance = 100
