@@ -1,4 +1,5 @@
 #!/usr/bin/env pybricks-micropython
+import string
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -6,6 +7,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
+from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
 from helperFunctions import waitForCenterButton
@@ -38,7 +40,15 @@ def getDeltaTime():
     return time
 
 def start(speed):
+    deltaTime = 0
+    watch = StopWatch()
+    watch.resume()
     moveUntilContact(speed)
+    watch.pause()
+    deltaTime = watch.time()
+    global traceStartPos, currPos
+    traceStartPos = calculatePosition(currPos, deltaTime/1000, speed, speed)
+    print(traceStartPos)
     return
 
 def startStop():
@@ -70,7 +80,6 @@ def forward(speed, distanceInMM):
             distanceFromWallDelta = distanceFromWallDelta * -1
         else:
             distanceFromWallDelta * 3
-        print(distanceFromWallDelta)
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
@@ -99,6 +108,9 @@ distanceRemaining = 2000
 
 sonar = UltrasonicSensor(Port.S2)
 
+startPos = (0.0, 0.0, 0.0)
+traceStartPos = (0.0, 0.0, 0.0)
+currPos = (0.0, 0.0, 0.0)
 inProgress = True
 while inProgress:
     if state == 0: #david   

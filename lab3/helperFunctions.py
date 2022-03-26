@@ -1,5 +1,3 @@
-from tokenize import Triple
-from typing import Tuple
 from pybricks.hubs import EV3Brick
 from math import sin, cos
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
@@ -19,15 +17,20 @@ def waitForCenterButton():
             if (button == button.CENTER):
                 return
 
-def calculateR():
+def calculateR(leftSpeed, rightSpeed):
     ev3 = EV3Brick()
-    leftMotor = Motor(Port.A)
-    rightMotor = Motor(Port.D)
-    r = ((rightMotor.speed()*radius + leftMotor.speed()*radius)/(rightMotor.speed()*radius - leftMotor.speed()*radius)) * (robotWidth/2)
+    vr = leftSpeed*radius
+    vl = rightSpeed*radius
+    if (rightSpeed == leftSpeed):
+        return 0
+    r = ((vr + vl)/(vr - vl)) * (robotWidth/2)
     return r
 
-def calculateICC(currPosition):
-    return Tuple(currPosition.x - calculateR() * sin(currPosition[2]), currPosition.y + calculateR * cos(currPosition[2]))
+
+def calculateICC(currPosition, leftSpeed, rightSpeed):
+    print("calculating ICC")
+    r = calculateR(leftSpeed, rightSpeed)
+    return (currPosition[0] - r * sin(currPosition[2]), currPosition[1] + r * cos(currPosition[2]))
 
 def calculateTheta(heading, deltaTime):
     return heading + calculateW() * deltaTime
@@ -39,12 +42,12 @@ def calculateW():
     w = (rightMotor.speed()*radius - leftMotor.speed()*radius)/robotWidth
     return w
 
-def calculatePosition(currPosition, deltaTime):
-    icc = calculateICC(currPosition)
+def calculatePosition(currPosition, deltaTime, leftSpeed, rightSpeed):
+    icc = calculateICC(currPosition, leftSpeed, rightSpeed)
     thetaPrime = calculateTheta(currPosition[2], deltaTime)
-    xPrime = (currPosition[0] - calculateICC(currPosition)[0]) * cos(calculateTheta(thetaPrime)) - (currPosition[1] - icc[1]) * sin(thetaPrime) + icc[0]
-    yPrime = (currPosition[0] - calculateICC(currPosition)[0]) * sin(thetaPrime) + currPosition[1] - icc[1] * cos(thetaPrime) + icc[1]
-    return Tuple(xPrime, yPrime, thetaPrime)
+    xPrime = (currPosition[0] - icc[0]) * cos(thetaPrime) - (currPosition[1] - icc[1]) * sin(thetaPrime) + icc[0]
+    yPrime = (currPosition[0] - icc[0]) * sin(thetaPrime) + currPosition[1] - icc[1] * cos(thetaPrime) + icc[1]
+    return (xPrime, yPrime, thetaPrime)
 
 def comparePosition(targetPosition, currPosition):
     maxDistance = 100
