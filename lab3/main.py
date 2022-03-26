@@ -10,6 +10,13 @@ from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
 from helperFunctions import waitForCenterButton
 
+###### NEEDED METHODS #######
+# Methods: calculateR(return float), calculateW(return float), calculateICC(return (x, y)), CalculateTheta(return float), calculateDistanceWhenStraight, calculateDistTurning,
+#          comparePosition
+#       
+#
+
+
 
 # This program requires LEGO EV3 MicroPython v2.0 or higher.
 # Click "Open user guide" on the EV3 extension tab for more information.
@@ -39,12 +46,12 @@ def startStop():
     return
 
 def forward(speed, distanceInMM):
-    global distanceRemaining
-    if distanceRemaining <= 0:
-        return 6
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
+    global distanceRemaining
+    if distanceRemaining <= 0:
+        return 6
     touchSensorFront = TouchSensor(Port.S1)
     notReached = True
     resetAndStartWatch()
@@ -80,6 +87,7 @@ def forwardBump():
     wait(200)
     turnInPlace(speed, 90)
     
+
 
 state = 0
 speed = 200
