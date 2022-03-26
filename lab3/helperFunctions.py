@@ -5,6 +5,7 @@ from math import sin, cos
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
 from pybricks.parameters import Port, Stop, Direction, Button, Color
+import math
 
 
 robotWidth = 136.525
@@ -37,3 +38,10 @@ def calculateW():
     rightMotor = Motor(Port.D)
     w = (rightMotor.speed()*radius - leftMotor.speed()*radius)/robotWidth
     return w
+
+
+def comparePosition(targetPosition, currPosition):
+    maxDistance = 100
+    distance = math.sqrt((targetPosition[0] - currPosition[0])**2 + (targetPosition[1] - currPosition[1])**2)
+    if (distance < maxDistance):
+        return True
