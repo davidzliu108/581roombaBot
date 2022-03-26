@@ -25,10 +25,10 @@ def calculateR():
     r = ((rightMotor.speed()*radius + leftMotor.speed()*radius)/(rightMotor.speed()*radius - leftMotor.speed()*radius)) * (robotWidth/2)
     return r
 
-def calculateICC(currPosition, heading):
-    return Tuple(currPosition.x - calculateR() * sin(heading), currPosition.y + calculateR * cos(heading))
+def calculateICC(currPosition):
+    return Tuple(currPosition.x - calculateR() * sin(currPosition[2]), currPosition.y + calculateR * cos(currPosition[2]))
 
-def calculateHeading(heading, deltaTime):
+def calculateTheta(heading, deltaTime):
     return heading + calculateW() * deltaTime
 
 def calculateW():
@@ -37,3 +37,10 @@ def calculateW():
     rightMotor = Motor(Port.D)
     w = (rightMotor.speed()*radius - leftMotor.speed()*radius)/robotWidth
     return w
+
+def calculatePosition(currPosition, deltaTime):
+    icc = calculateICC(currPosition)
+    thetaPrime = calculateTheta(currPosition[2], deltaTime)
+    xPrime = (currPosition[0] - calculateICC(currPosition)[0]) * cos(calculateTheta(thetaPrime)) - (currPosition[1] - icc[1]) * sin(thetaPrime) + icc[0]
+    yPrime = (currPosition[0] - calculateICC(currPosition)[0]) * sin(thetaPrime) + currPosition[1] - icc[1] * cos(thetaPrime) + icc[1]
+    return Tuple(xPrime, yPrime, thetaPrime)
