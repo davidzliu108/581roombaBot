@@ -42,7 +42,6 @@ def getDeltaTime():
 
 def start(speed):
     deltaTime = 0
-    watch = StopWatch()
     watch.resume()
     moveUntilContact(speed)
     watch.pause()
@@ -55,11 +54,11 @@ def start(speed):
 
 def startStop():
     global currPos, speed
-    watch = StopWatch()
     watch.resume()
     moveForDistance(-1 * speed, 60, True, 0)
     watch.pause()
     currPos =  calculatePosition(currPos, watch.time() / 1000, radians(speed * -1), radians(speed * -1))
+    print("After contact: " + str(currPos))
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     watch.reset()
@@ -71,6 +70,7 @@ def startStop():
     return
 
 def forward(speed, distanceInMM):
+    time = 0
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
@@ -82,10 +82,15 @@ def forward(speed, distanceInMM):
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
     idealDistance = 100
+    # distanceFromWall = sonar.distance()
+    # distanceFromWallDelta = idealDistance - distanceFromWall
+    # leftMotor.run(speed + distanceFromWallDelta)
+    # rightMotor.run(speed - distanceFromWallDelta)
+    # currPos = calculatePosition(currPos, 100/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
+    #wait(100)
     while (notReached):
-        wait(100)
-        currPos = calculatePosition(currPos, 100/1000, radians(leftMotor.speed()), radians(rightMotor.speed()))
-        print(currPos)
+        time = watch.time()
+        resetAndStartWatch()
         distanceFromWall = sonar.distance()
         distanceFromWallDelta = idealDistance - distanceFromWall
         negative = distanceFromWallDelta < 0
@@ -96,22 +101,35 @@ def forward(speed, distanceInMM):
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
+        print(time/1000)
+        currPos = calculatePosition(currPos, time/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
+        print(currPos)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
         if distanceRemaining <= 0:
             notReached = False
             return 6
         if touchSensorFront.pressed() == True:
+            print("Bumped")
             notReached = False
             stop()
             return 3
+        #wait(100)
     return
 
 def forwardBump():
+    global currPos, speed
+    watch.resume()
+    moveForDistance(-1 * speed, 60, True, 0)
+    watch.pause()
+    currPos =  calculatePosition(currPos, watch.time() / 1000, radians(speed * -1), radians(speed * -1))
+    print("After contact: " + str(currPos))
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
-    moveForDistance(-1 * speed, 50, True, 0)
-    wait(200)
+    watch.reset()
+    watch.resume()
     turnInPlace(speed, 90)
+    currPos = calculatePosition(currPos, watch.time() / 1000, radians(speed), radians(speed * -1))
+    print("After Turn: " + str(currPos))
 
 
     
@@ -119,11 +137,10 @@ def forwardBump():
 
 state = 0
 speed = 200
-watch = StopWatch()
 distanceRemaining = 1000
 
 sonar = UltrasonicSensor(Port.S2)
-
+watch = StopWatch()
 startPos = (0.0, 0.0, 0.0)
 traceStartPos = (0.0, 0.0, 0.0)
 currPos = (0.0, 0.0, 0.0)
@@ -134,18 +151,21 @@ while inProgress:
         waitForCenterButton()
         start(speed)
         nextState = 1
+        resetAndStartWatch()
     elif state == 1: #cody
         # startStop
-        wait(100)
         startStop()
         nextState = 2
+        resetAndStartWatch()
     elif state == 2: #david
         # forward
         nextState = forward(speed, distanceRemaining)
+        resetAndStartWatch()
     elif state == 3: #cody
         # forwardBump
         forwardBump()
         nextState = 2
+        resetAndStartWatch()
     elif state == 6: #cody
         # end
         stop()
