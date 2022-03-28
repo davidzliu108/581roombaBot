@@ -1,6 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-from cgitb import reset
-import string
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -8,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import radians
+from math import pi, radians
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -43,6 +41,7 @@ def getDeltaTime():
 
 def start(speed):
     deltaTime = 0
+    watch.reset()
     watch.resume()
     moveUntilContact(speed)
     watch.pause()
@@ -50,16 +49,15 @@ def start(speed):
     global traceStartPos, currPos
     traceStartPos = calculatePosition(currPos, deltaTime / 1000, radians(speed), radians(speed))
     currPos = traceStartPos
-    #print(traceStartPos)
     return
 
 def startStop():
     global currPos, speed
+    watch.reset()
     watch.resume()
     moveForDistance(-1 * speed, 60, True, 0)
     watch.pause()
     currPos =  calculatePosition(currPos, watch.time() / 1000, radians(speed * -1), radians(speed * -1))
-    print("After contact: " + str(currPos))
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     watch.reset()
@@ -68,15 +66,17 @@ def startStop():
     watch.pause()
     currPos = calculatePosition(currPos, watch.time() / 1000, radians(speed), radians(speed * -1))
     print("After Turn: " + str(currPos))
+    print(gyro.angle())
     return
 
 def forward(speed, distanceInMM):
     time = 0
-    ev3 = EV3Brick()
+    watch.reset()
+    watch.resume()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     global distanceRemaining, currPos
-    global angle
+    global angle, gyroWatch, gyro
     if distanceRemaining <= 0:
         return 6
     touchSensorFront = TouchSensor(Port.S1)
@@ -84,18 +84,19 @@ def forward(speed, distanceInMM):
     resetAndStartWatch()
     sonar = UltrasonicSensor(Port.S2)
     idealDistance = 100
-    # distanceFromWall = sonar.distance()
-    # distanceFromWallDelta = idealDistance - distanceFromWall
-    # leftMotor.run(speed + distanceFromWallDelta)
-    # rightMotor.run(speed - distanceFromWallDelta)
-    # currPos = calculatePosition(currPos, 100/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
-    #wait(100)
+    distanceFromWall = sonar.distance()
+    distanceFromWallDelta = idealDistance - distanceFromWall
+    leftMotor.run(speed + distanceFromWallDelta)
+    rightMotor.run(speed - distanceFromWallDelta)
+    #currPos = calculatePosition(currPos, 100/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
+    wait(100)
     while (notReached):
-        if gyroWatch.time()/1000 > 2.0:
+        
+        if gyroWatch.time()/1000 > 0.25:
             angle += gyro.angle()
             gyroWatch.reset()
             gyroWatch.resume()
-            print("Angle: " + str(angle))
+            gyro.reset_angle(0)
         time = watch.time()
         resetAndStartWatch()
         distanceFromWall = sonar.distance()
@@ -108,7 +109,6 @@ def forward(speed, distanceInMM):
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
-        print(time/1000)
         currPos = calculatePosition(currPos, time/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
         print(currPos)
         distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
@@ -120,11 +120,12 @@ def forward(speed, distanceInMM):
             notReached = False
             stop()
             return 3
-        #wait(100)
+        wait(100)
     return
 
 def forwardBump():
     global currPos, speed
+    watch.reset()
     watch.resume()
     moveForDistance(-1 * speed, 60, True, 0)
     watch.pause()
@@ -147,10 +148,11 @@ speed = 200
 distanceRemaining = 1000
 
 sonar = UltrasonicSensor(Port.S2)
-gyro = GyroSensor(Port.S3)
-gyro.reset_angle()
+gyro = GyroSensor(Port.S3, Direction.COUNTERCLOCKWISE)
+gyro.reset_angle(pi / 2)
 gyroWatch = StopWatch()
-gyroWatch = reset()
+gyroWatch.reset()
+gyroWatch.resume()
 watch = StopWatch()
 angle = 0
 startPos = (0.0, 0.0, 0.0)
