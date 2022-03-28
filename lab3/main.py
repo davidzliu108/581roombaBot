@@ -1,4 +1,5 @@
 #!/usr/bin/env pybricks-micropython
+from cgitb import reset
 import string
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
@@ -75,6 +76,7 @@ def forward(speed, distanceInMM):
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     global distanceRemaining, currPos
+    global angle
     if distanceRemaining <= 0:
         return 6
     touchSensorFront = TouchSensor(Port.S1)
@@ -89,6 +91,11 @@ def forward(speed, distanceInMM):
     # currPos = calculatePosition(currPos, 100/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
     #wait(100)
     while (notReached):
+        if gyroWatch.time()/1000 > 2.0:
+            angle += gyro.angle()
+            gyroWatch.reset()
+            gyroWatch.resume()
+            print("Angle: " + str(angle))
         time = watch.time()
         resetAndStartWatch()
         distanceFromWall = sonar.distance()
@@ -140,7 +147,12 @@ speed = 200
 distanceRemaining = 1000
 
 sonar = UltrasonicSensor(Port.S2)
+gyro = GyroSensor(Port.S3)
+gyro.reset_angle()
+gyroWatch = StopWatch()
+gyroWatch = reset()
 watch = StopWatch()
+angle = 0
 startPos = (0.0, 0.0, 0.0)
 traceStartPos = (0.0, 0.0, 0.0)
 currPos = (0.0, 0.0, 0.0)
@@ -168,6 +180,7 @@ while inProgress:
         resetAndStartWatch()
     elif state == 6: #cody
         # end
+        print("Angle: " + angle)
         stop()
         inProgress = False
         ev3.speaker.beep()
