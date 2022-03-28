@@ -7,6 +7,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
+from math import radians
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -47,22 +48,33 @@ def start(speed):
     watch.pause()
     deltaTime = watch.time()
     global traceStartPos, currPos
-    traceStartPos = calculatePosition(currPos, deltaTime / 1000, speed, speed)
-    print(traceStartPos)
+    traceStartPos = calculatePosition(currPos, deltaTime / 1000, radians(speed), radians(speed))
+    currPos = traceStartPos
+    #print(traceStartPos)
     return
 
 def startStop():
+    global currPos, speed
+    watch = StopWatch()
+    watch.resume()
     moveForDistance(-1 * speed, 60, True, 0)
+    watch.pause()
+    currPos =  calculatePosition(currPos, watch.time() / 1000, radians(speed * -1), radians(speed * -1))
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
+    watch.reset()
+    watch.resume()
     turnInPlace(speed, 90)
+    watch.pause()
+    currPos = calculatePosition(currPos, watch.time() / 1000, radians(speed), radians(speed * -1))
+    print("After Turn: " + str(currPos))
     return
 
 def forward(speed, distanceInMM):
     ev3 = EV3Brick()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
-    global distanceRemaining
+    global distanceRemaining, currPos
     if distanceRemaining <= 0:
         return 6
     touchSensorFront = TouchSensor(Port.S1)
@@ -72,6 +84,8 @@ def forward(speed, distanceInMM):
     idealDistance = 100
     while (notReached):
         wait(100)
+        currPos = calculatePosition(currPos, 100/1000, radians(leftMotor.speed()), radians(rightMotor.speed()))
+        print(currPos)
         distanceFromWall = sonar.distance()
         distanceFromWallDelta = idealDistance - distanceFromWall
         negative = distanceFromWallDelta < 0
@@ -98,13 +112,15 @@ def forwardBump():
     moveForDistance(-1 * speed, 50, True, 0)
     wait(200)
     turnInPlace(speed, 90)
+
+
     
 
 
 state = 0
 speed = 200
 watch = StopWatch()
-distanceRemaining = 2000
+distanceRemaining = 1000
 
 sonar = UltrasonicSensor(Port.S2)
 
