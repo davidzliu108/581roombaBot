@@ -1,5 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-from os import urandom
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -32,9 +31,32 @@ from helperFunctions import waitForCenterButton
 ev3 = EV3Brick()
 
 def getAngle():
-    global angle
+    global angle, currPos, gyro
+    #print(gyro.angle())
     angle += gyro.angle()
+    #print("Deg: " + str(angle) + " Rad: " + str(radians(angle)))
+    #print(currPos)
     gyro.reset_angle(0)
+    
+def checkIfAtDestination(destination):
+    global currPos, leftTraceStart, counter
+    tolerance = 150 # in mm
+    squaredXs = (destination[0] - currPos[0]) ** 2
+    squaredYs = (destination[1] - currPos[1]) ** 2
+    distance = (squaredXs + squaredYs) ** 0.5
+    counter = counter + 1
+    if (counter == 20):
+        counter = 0
+        print("Angle:" + str(angle))
+        print("Pos: " + str(currPos))
+        print("Distance: " + str(distance))
+    if (leftTraceStart):
+        leftTraceStart = True
+        done = distance <= tolerance
+        return done
+    else: 
+        return distance > tolerance * 1.25
+
 
 def resetWatch():
     watch.reset()
@@ -51,21 +73,31 @@ def start(speed):
     resetWatch()
     moveUntilContact(speed)
     getAngle()
-    traceStartPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed))
-    currPos = traceStartPos
-    print("Bump " + str(currPos))
-    print("Gyro: " + str(gyro.angle()))
+    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed), radians(angle))
     return
 
 def startStop():
-    forwardBump()
+    global currPos, speed
+    resetWatch()
+    moveForDistance(-1 * speed, 60, True, 0)
+    getAngle()
+    currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1), radians(angle))
+    traceStartPos = currPos
+    print("Trace: " + str(traceStartPos))
+    ev3.speaker.beep()
+    global distanceRemaining
+    distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
+    resetWatch()
+    turnInPlace(speed, 90)
+    getAngle()
+    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
     return
 
 def forward(speed):
     resetWatch()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
-    global distanceRemaining, currPos
+    global distanceRemaining, currPos, traceStartPos, leftTraceStart
     global angle, gyroWatch, gyro
     if distanceRemaining <= 0:
         return 6
@@ -76,18 +108,20 @@ def forward(speed):
     started = False
     distanceFromWallDelta = 0
     while (notReached):
-        # if (currPos[2] > pi):
-        #     newheading = currPos[2] - 2 * pi
-        #     currPos = (currPos[0], currPos[1], newheading)
-        # elif (currPos[2] < 2 * pi):
-        #     newheading = currPos[2] + 2 * pi
-        #     currPos = (currPos[0], currPos[1], newheading)
         if started:
-            currPos = calculatePosition(currPos, getDeltaTime()/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta))
-            print(currPos)
+            getAngle()
+            currPos = calculatePosition(currPos, getDeltaTime()/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta), radians(angle))
         else:
             resetWatch()
             started = True
+        if leftTraceStart:
+            done = checkIfAtDestination(traceStartPos)
+            if (done): 
+                checkIfAtDestination(traceStartPos)
+                return 6
+        else:
+            leftTraceStart = checkIfAtDestination(traceStartPos)
+            if leftTraceStart: print("Left trace start radius")
         distanceFromWall = sonar.distance()
         distanceFromWallDelta = idealDistance - distanceFromWall
         negative = distanceFromWallDelta < 0
@@ -98,12 +132,11 @@ def forward(speed):
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
-        distanceRemaining -= getDistanceTraveled(speed, getDeltaTime())
+        #distanceRemaining -= getDistanceTraveled(speed, 50)
         if distanceRemaining <= 0:
             notReached = False
             return 6
         if touchSensorFront.pressed() == True:
-            print("Bumped")
             notReached = False
             stop()
             return 3
@@ -114,15 +147,14 @@ def forwardBump():
     global currPos, speed
     resetWatch()
     moveForDistance(-1 * speed, 60, True, 0)
-    currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1))
-    print("After contact: " + str(currPos))
+    getAngle()
+    currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1), radians(angle))
     global distanceRemaining
     distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     resetWatch()
     turnInPlace(speed, 90)
-    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1))
-    print("After Turn: " + str(currPos))
-    print(str(gyro.angle()))
+    getAngle()
+    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
 
 
     
@@ -132,6 +164,7 @@ state = 0
 speed = 200
 distanceRemaining = 1000
 
+counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S3, Direction.COUNTERCLOCKWISE)
 gyro.reset_angle(0)
@@ -140,10 +173,12 @@ gyroWatch.reset()
 gyroWatch.resume()
 watch = StopWatch()
 angle = 0
+distanceFromDest = 0
 startPos = (0.0, 0.0, 0.0)
 traceStartPos = (0.0, 0.0, 0.0)
 currPos = (0.0, 0.0, 0.0)
 inProgress = True
+leftTraceStart = False
 while inProgress:
     if state == 0: #david   
         # start
@@ -153,7 +188,7 @@ while inProgress:
     elif state == 1: #cody
         # startStop
         startStop()
-        nextState = 6
+        nextState = 2
     elif state == 2: #david
         # forward
         nextState = forward(speed)
