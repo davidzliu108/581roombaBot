@@ -70,14 +70,16 @@ def getDeltaTime():
 def start(speed):
     global traceStartPos, currPos
     gyro.reset_angle(0)
+    print("Start: " + str(gyro.angle()))
     resetWatch()
     moveUntilContact(speed)
     getAngle()
+    print("After Bump: " + str(angle)) 
     currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed), radians(angle))
     return
 
 def startStop():
-    global currPos, speed
+    global currPos, speed, traceStartPos
     resetWatch()
     moveForDistance(-1 * speed, 60, True, 0)
     getAngle()
@@ -115,6 +117,7 @@ def forward(speed):
             resetWatch()
             started = True
         if leftTraceStart:
+            print("Trace debug: " + str(traceStartPos))
             done = checkIfAtDestination(traceStartPos)
             if (done): 
                 checkIfAtDestination(traceStartPos)
@@ -166,7 +169,7 @@ distanceRemaining = 1000
 
 counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
-gyro = GyroSensor(Port.S3, Direction.COUNTERCLOCKWISE)
+gyro = GyroSensor(Port.S4, Direction.COUNTERCLOCKWISE)
 gyro.reset_angle(0)
 gyroWatch = StopWatch()
 gyroWatch.reset()
