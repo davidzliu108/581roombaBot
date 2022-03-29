@@ -6,7 +6,12 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 import math
 
 
-robotWidth = 136.525
+#robotWidth = 160.3 # mid
+#robotWidth = 190 # full
+# 160 was close
+robotWidth = 140
+#robotWidth = (190 + 160.3) / 2
+#robotWidth = 108 # inside
 radius = 28
 
 def waitForCenterButton():
@@ -43,20 +48,20 @@ def calculateW(leftSpeed, rightSpeed):
     return w
 
 def calculatePosition(currPosition, deltaTime, leftSpeed, rightSpeed):
-    print("curving")
     icc = calculateICC(currPosition, leftSpeed, rightSpeed)
     thetaPrime = calculateTheta(currPosition[2], deltaTime, leftSpeed, rightSpeed)
     if(leftSpeed == rightSpeed):
         posPrime = calculatePositionWhenStraight(currPosition, leftSpeed, deltaTime)
         return posPrime
+    print("curving")
     xPrime = ((currPosition[0] - icc[0]) * cos(calculateW(leftSpeed, rightSpeed) * deltaTime) - (currPosition[1] - icc[1]) * sin(calculateW(leftSpeed, rightSpeed) * deltaTime)) + icc[0]
     yPrime = ((currPosition[0] - icc[0]) * sin(calculateW(leftSpeed, rightSpeed) * deltaTime) + (currPosition[1] - icc[1]) * cos(calculateW(leftSpeed, rightSpeed) * deltaTime)) + icc[1]
     return (xPrime, yPrime, thetaPrime)
 
 def calculatePositionWhenStraight(currPosition, speed, deltaTime):
     print("Straight")
-    xPrime = currPosition[0] + speed * radius * cos(currPosition[2]) * deltaTime
-    yPrime = currPosition[1] + speed * radius * sin(currPosition[2]) * deltaTime
+    xPrime = currPosition[0] + speed * radius * deltaTime * cos(currPosition[2])
+    yPrime = currPosition[1] + speed * radius  * deltaTime * sin(currPosition[2])
     return (xPrime, yPrime, currPosition[2])
 
 def comparePosition(targetPosition, currPosition):

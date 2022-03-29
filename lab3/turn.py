@@ -11,17 +11,18 @@ from moveStraight import getTimeToDestinationInMS
 from constants import LARGE_WHEEL_DIAMETER_IN_MM
 from moveStraight import getCircumference
 
+robotWidth = robotWidth = 140
+
+
 def getTimeToTurnInMSFromDeg(deg, speed):
     revolution = deg / 360
-    botDiameterInMM = 133.35
-    distance = botDiameterInMM * math.pi * revolution
+    distance = robotWidth * math.pi * revolution
     revolutions = distance / getCircumference()
     time = math.trunc((revolutions * 360 / (speed)) * 1000)
     return time
 
 
 def turnInPlace(speed, deg):
-    ev3 = EV3Brick()
     if (deg < 0):
         leftMotor = Motor(Port.A, Direction.COUNTERCLOCKWISE)
         rightMotor = Motor(Port.D,  Direction.CLOCKWISE)
