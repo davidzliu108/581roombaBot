@@ -1,4 +1,5 @@
 #!/usr/bin/env pybricks-micropython
+from turtle import st
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -10,8 +11,7 @@ from math import pi, radians
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
-from helperFunctions import waitForCenterButton
-
+from helperFunctions import waitForCenterButton, getAngleToFacePoint
 ###### NEEDED METHODS #######
 # Methods: calculateR(return float), calculateW(return float), calculateICC(return (x, y)), CalculateTheta(return float), calculateDistanceWhenStraight, calculateDistTurning,
 #          comparePosition
@@ -32,18 +32,18 @@ ev3 = EV3Brick()
 
 def getAngle():
     global angle, currPos, gyro
-    #print(gyro.angle())
     angle += gyro.angle()
-    #print("Deg: " + str(angle) + " Rad: " + str(radians(angle)))
-    #print(currPos)
     gyro.reset_angle(0)
     
+def findDistance(a, b):
+    squaredXs = (b[0] - a[0]) ** 2
+    squaredYs = (b[1] - a[1]) ** 2
+    return (squaredXs + squaredYs) ** 0.5
+
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
     tolerance = 150 # in mm
-    squaredXs = (destination[0] - currPos[0]) ** 2
-    squaredYs = (destination[1] - currPos[1]) ** 2
-    distance = (squaredXs + squaredYs) ** 0.5
+    distance = findDistance(currPos, destination)
     counter = counter + 1
     if (counter == 20):
         counter = 0
@@ -132,7 +132,6 @@ def forward(speed):
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
-        #distanceRemaining -= getDistanceTraveled(speed, 50)
         if distanceRemaining <= 0:
             notReached = False
             return 6
@@ -156,14 +155,23 @@ def forwardBump():
     getAngle()
     currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
 
+def returnToStart():
+    desiredHeading = getAngleToFacePoint((74.25572001155581, 126.9482924725219, 4.433136300065597), (0, 0))
+    neededTurnDeg = currPos[2] - desiredHeading
+    resetWatch()
+    turnInPlace(speed, neededTurnDeg)
+    if (neededTurnDeg > 0): 
+        currPos = calculatePosition(currPos, getDeltaTime(), speed, speed * -1, radians(angle))
+    elif (neededTurnDeg < 0):
+        currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(angle))
+    distance = findDistance(currPos, (0, 0))
+    moveForDistance(speed, distance, True, 0)
 
     
 
-
 state = 0
 speed = 200
-distanceRemaining = 1000
-
+distanceRemaining = 100
 counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S3, Direction.COUNTERCLOCKWISE)
@@ -196,6 +204,9 @@ while inProgress:
         # forwardBump
         forwardBump()
         nextState = 2
+    elif state == 4: 
+        # return to start
+        returnToStart()
     elif state == 6: #cody
         # end
         stop()

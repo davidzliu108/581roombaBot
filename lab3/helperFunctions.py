@@ -70,3 +70,10 @@ def comparePosition(targetPosition, currPosition):
     if (distance < maxDistance):
         return True
     return False
+
+def getAngleToFacePoint(start, end):
+    angle= math.atan2(end[0] - start[0], end[1] - start[1])
+    angle = angle * (180 / math.pi)
+    if (angle < 0):
+        angle = 360 - (-angle)
+    return math.trunc(angle * -1)
