@@ -1,5 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-from turtle import st
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -7,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians
+from math import pi, radians, degrees
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -35,6 +34,7 @@ def getAngle():
     angle += gyro.angle()
     gyro.reset_angle(0)
     
+    
 def findDistance(a, b):
     squaredXs = (b[0] - a[0]) ** 2
     squaredYs = (b[1] - a[1]) ** 2
@@ -42,7 +42,7 @@ def findDistance(a, b):
 
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
-    tolerance = 150 # in mm
+    tolerance = 125 # in mm
     distance = findDistance(currPos, destination)
     counter = counter + 1
     if (counter == 20):
@@ -117,11 +117,10 @@ def forward(speed):
             resetWatch()
             started = True
         if leftTraceStart:
-            print("Trace debug: " + str(traceStartPos))
             done = checkIfAtDestination(traceStartPos)
             if (done): 
                 checkIfAtDestination(traceStartPos)
-                return 6
+                return 4
         else:
             leftTraceStart = checkIfAtDestination(traceStartPos)
             if leftTraceStart: print("Left trace start radius")
@@ -135,15 +134,12 @@ def forward(speed):
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
-        if distanceRemaining <= 0:
-            notReached = False
-            return 6
         if touchSensorFront.pressed() == True:
             notReached = False
             stop()
             return 3
         wait(50)
-    return 6
+    return 2
 
 def forwardBump():
     global currPos, speed
@@ -159,16 +155,29 @@ def forwardBump():
     currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
 
 def returnToStart():
+    global currPos
+    print("returning to start")
+    neededTurnDeg = 0.0
+    desiredHeading = 0.0
     desiredHeading = getAngleToFacePoint((74.25572001155581, 126.9482924725219, 4.433136300065597), (0, 0))
-    neededTurnDeg = currPos[2] - desiredHeading
+    desiredHeading = (desiredHeading + 360) % 360
+    currentHeading = (degrees(currPos[2]) + 360) % 360
+    neededTurnDeg = desiredHeading - currentHeading    #  degrees(currentHeading) - desiredHeading
+    neededTurnDeg = (neededTurnDeg + 180) % 360 - 180
+    #  a = targetA - sourceA
+    #  a = (a + 180) % 360 - 180
+    print("current: " + str(currentHeading))
+    print("Desired heading: " + str(desiredHeading))
+    print("Need Turn: " + str(neededTurnDeg))
     resetWatch()
-    turnInPlace(speed, neededTurnDeg)
+    turnInPlace(speed, -neededTurnDeg)
     if (neededTurnDeg > 0): 
         currPos = calculatePosition(currPos, getDeltaTime(), speed, speed * -1, radians(angle))
     elif (neededTurnDeg < 0):
         currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(angle))
     distance = findDistance(currPos, (0, 0))
     moveForDistance(speed, distance, True, 0)
+    return
 
     
 
@@ -210,6 +219,7 @@ while inProgress:
     elif state == 4: 
         # return to start
         returnToStart()
+        nextState = 6
     elif state == 6: #cody
         # end
         stop()
