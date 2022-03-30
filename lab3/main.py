@@ -6,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians, degrees
+from math import pi, radians, degrees,trunc
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -42,10 +42,10 @@ def findDistance(a, b):
 
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
-    tolerance = 125 # in mm
+    tolerance = 200 # in mm
     distance = findDistance(currPos, destination)
     counter = counter + 1
-    if (counter == 20):
+    if (counter >= 10):
         counter = 0
         print("Angle:" + str(angle))
         print("Pos: " + str(currPos))
@@ -79,16 +79,16 @@ def start(speed):
     return
 
 def startStop():
-    global currPos, speed, traceStartPos
+    global currPos, speed, traceStartPos, distanceToWallFromStart
     resetWatch()
-    moveForDistance(-1 * speed, 60, True, 0)
+    moveForDistance(-1 * speed, 130, True, 0)
     getAngle()
     currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1), radians(angle))
+    distanceToWallFromStart = findDistance((0,0), currPos)
     traceStartPos = currPos
+
     print("Trace: " + str(traceStartPos))
     ev3.speaker.beep()
-    global distanceRemaining
-    distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     resetWatch()
     turnInPlace(speed, 90)
     getAngle()
@@ -99,10 +99,8 @@ def forward(speed):
     resetWatch()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
-    global distanceRemaining, currPos, traceStartPos, leftTraceStart
+    global currPos, traceStartPos, leftTraceStart
     global angle, gyroWatch, gyro
-    if distanceRemaining <= 0:
-        return 6
     touchSensorFront = TouchSensor(Port.S1)
     notReached = True
     sonar = UltrasonicSensor(Port.S2)
@@ -144,11 +142,9 @@ def forward(speed):
 def forwardBump():
     global currPos, speed
     resetWatch()
-    moveForDistance(-1 * speed, 60, True, 0)
+    moveForDistance(-1 * speed, 90, True, 0)
     getAngle()
     currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1), radians(angle))
-    global distanceRemaining
-    distanceRemaining -= getDistanceTraveled(-1 * speed, getTimeToDestinationInMS(50, speed))
     resetWatch()
     turnInPlace(speed, 90)
     getAngle()
@@ -156,6 +152,7 @@ def forwardBump():
 
 def returnToStart():
     global currPos
+    ERROR_CORRECTION = .8
     print("returning to start")
     neededTurnDeg = 0.0
     desiredHeading = 0.0
@@ -164,8 +161,7 @@ def returnToStart():
     currentHeading = (degrees(currPos[2]) + 360) % 360
     neededTurnDeg = desiredHeading - currentHeading    #  degrees(currentHeading) - desiredHeading
     neededTurnDeg = (neededTurnDeg + 180) % 360 - 180
-    #  a = targetA - sourceA
-    #  a = (a + 180) % 360 - 180
+    neededTurnDeg = trunc(neededTurnDeg * ERROR_CORRECTION)
     print("current: " + str(currentHeading))
     print("Desired heading: " + str(desiredHeading))
     print("Need Turn: " + str(neededTurnDeg))
@@ -176,6 +172,8 @@ def returnToStart():
     elif (neededTurnDeg < 0):
         currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(angle))
     distance = findDistance(currPos, (0, 0))
+    distance *= ERROR_CORRECTION
+    distance = min(distance, distanceToWallFromStart)
     moveForDistance(speed, distance, True, 0)
     return
 
@@ -183,7 +181,6 @@ def returnToStart():
 
 state = 0
 speed = 200
-distanceRemaining = 100
 counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S4, Direction.COUNTERCLOCKWISE)
@@ -199,6 +196,7 @@ traceStartPos = (0.0, 0.0, 0.0)
 currPos = (0.0, 0.0, 0.0)
 inProgress = True
 leftTraceStart = False
+distanceToWallFromStart = 0.0
 while inProgress:
     if state == 0: #david   
         # start
