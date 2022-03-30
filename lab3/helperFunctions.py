@@ -64,13 +64,6 @@ def calculatePositionWhenStraight(currPosition, speed, deltaTime, heading):
     yPrime = currPosition[1] + speed * radius  * deltaTime * sin(heading)
     return (xPrime, yPrime, currPosition[2])
 
-def comparePosition(targetPosition, currPosition):
-    maxDistance = 100
-    distance = math.sqrt((targetPosition[0] - currPosition[0])**2 + (targetPosition[1] - currPosition[1])**2)
-    if (distance < maxDistance):
-        return True
-    return False
-
 def getAngleToFacePoint(start, end):
     angle= math.atan2(end[0] - start[0], end[1] - start[1])
     angle = angle * (180 / math.pi)
