@@ -1,3 +1,6 @@
+# Cody Irion PID: 702442575
+# David Liu PID: 730317472
+
 #!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
@@ -236,8 +239,8 @@ while inProgress:
     elif state == 6: #cody
         # end
         stop()
-        inProgress = False
         ev3.speaker.beep()
+        inProgress = False
         print("Finished!")
         
     state = nextState
