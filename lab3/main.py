@@ -9,11 +9,12 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians, degrees,trunc
+from math import pi, radians, degrees,trunc, 
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
 from helperFunctions import waitForCenterButton, getAngleToFacePoint
+import math
 ###### NEEDED METHODS #######
 # Methods: calculateR(return float), calculateW(return float), calculateICC(return (x, y)), CalculateTheta(return float), calculateDistanceWhenStraight, calculateDistTurning,
 #          comparePosition
@@ -179,6 +180,12 @@ def returnToStart():
     distance = min(distance, distanceToWallFromStart)
     moveForDistance(speed, distance, True, 0)
     return
+
+
+def distanceMLine(start, end):
+    numerator = abs((end[0] - start[0])*(start[1] - currPos[1]) - (start[0] - currPos[0])*(end[1] - start[1]))
+    denominator = math.sqrt((end[0]-start[0])**2 + (end[1] - start[1])**2)
+    return numerator / denominator
 
     
 
