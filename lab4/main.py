@@ -195,6 +195,11 @@ def driveTowardsGoal():
             return 2
     return
 
+
+def distanceMLine(start, end):
+    numerator = abs((end[0] - start[0])*(start[1] - currPos[1]) - (start[0] - currPos[0])*(end[1] - start[1]))
+    denominator = math.sqrt((end[0]-start[0])**2 + (end[1] - start[1])**2)
+    return numerator / denominator
     
 
 state = 0
