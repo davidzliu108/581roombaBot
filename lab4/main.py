@@ -16,7 +16,7 @@ from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, g
 from helperFunctions import waitForCenterButton, getAngleToFacePoint
 
 ###### NEEDED METHODS #######
-# Methods: createLineEquation, findDistanceFromLine, driveTowardsGoal
+# Methods: findDistanceFromLine, driveTowardsGoal
 #       
 #
 
@@ -159,7 +159,7 @@ def returnToStart():
     print("returning to start")
     neededTurnDeg = 0.0
     desiredHeading = 0.0
-    desiredHeading = getAngleToFacePoint((74.25572001155581, 126.9482924725219, 4.433136300065597), (0, 0))
+    desiredHeading = getAngleToFacePoint(currPos, (1800, 1800))
     desiredHeading = (desiredHeading + 360) % 360
     currentHeading = (degrees(currPos[2]) + 360) % 360
     neededTurnDeg = desiredHeading - currentHeading    #  degrees(currentHeading) - desiredHeading
@@ -204,15 +204,10 @@ while inProgress:
     if state == 0: #david   
         # start
         waitForCenterButton()
-        start(speed)
         nextState = 1
     elif state == 1: #cody
-        # startStop
-        startStop()
-        nextState = 2
-    elif state == 2: #david
-        # forward
-        nextState = forward(speed)
+        # moveTowardsGoal
+        # nextState = moveTowardsState()
     elif state == 3: #cody
         # forwardBump
         forwardBump()
