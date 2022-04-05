@@ -10,7 +10,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians, degrees,trunc
+from math import pi, radians, degrees,trunc,sqrt
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -121,11 +121,13 @@ def traceObstacle():
             started = True
         if leftTraceStart:
             done = checkIfAtDestination(goalPos)
-            reachedMLine = reachedMLine()
+            distanceFromMLine = distanceFromMLine(startPos, goalPos)
+            ACCEPTANCE_RADIUS = 100
+            if (distanceFromMLine <= 100):
+                stop()
+                return 1
             if (done): 
                 return 6
-            elif reachedMLine:
-                return 1
         else:
             leftTraceStart = checkIfAtDestination(traceStartPos)
             if leftTraceStart: print("Left trace start radius")
@@ -180,7 +182,6 @@ def driveTowardsGoal():
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     touchSensorFront = TouchSensor(Port.S1)
-
     leftMotor.run(speed)
     rightMotor.run(speed)
     while (True):
@@ -198,7 +199,7 @@ def driveTowardsGoal():
 
 def distanceMLine(start, end):
     numerator = abs((end[0] - start[0])*(start[1] - currPos[1]) - (start[0] - currPos[0])*(end[1] - start[1]))
-    denominator = math.sqrt((end[0]-start[0])**2 + (end[1] - start[1])**2)
+    denominator = sqrt((end[0]-start[0])**2 + (end[1] - start[1])**2)
     return numerator / denominator
     
 
@@ -228,7 +229,7 @@ while inProgress:
         waitForCenterButton()
         nextState = 1
     elif state == 1: #cody
-        # moveTowardsGoal
+        # move Towards Goal
         nextState = driveTowardsGoal()
     elif state == 2: #cody
         # trade Obstacle
