@@ -16,7 +16,7 @@ from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, g
 from helperFunctions import waitForCenterButton, getAngleToFacePoint
 
 ###### NEEDED METHODS #######
-# Methods: createLineEquation, findDistanceFromLine
+# Methods: createLineEquation, findDistanceFromLine, driveTowardsGoal
 #       
 #
 
