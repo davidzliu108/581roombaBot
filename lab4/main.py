@@ -2,6 +2,7 @@
 #  David Liu PID: 730317472
 # 
 # !/usr/bin/env pybricks-micropython
+from turtle import distance
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -9,15 +10,14 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians, degrees,trunc, 
+from math import pi, radians, degrees,trunc,sqrt
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
 from helperFunctions import waitForCenterButton, getAngleToFacePoint
-import math
+
 ###### NEEDED METHODS #######
-# Methods: calculateR(return float), calculateW(return float), calculateICC(return (x, y)), CalculateTheta(return float), calculateDistanceWhenStraight, calculateDistTurning,
-#          comparePosition
+# Methods: findDistanceFromLine, driveTowardsGoal
 #       
 #
 
@@ -37,6 +37,7 @@ def getAngle():
     global angle, currPos, gyro
     angle += gyro.angle()
     gyro.reset_angle(0)
+    return angle
     
     
 def findDistance(a, b):
@@ -99,12 +100,12 @@ def startStop():
     currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
     return
 
-def forward(speed):
+def traceObstacle():
     resetWatch()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     global currPos, traceStartPos, leftTraceStart
-    global angle, gyroWatch, gyro
+    global angle, gyroWatch, gyro, speed
     touchSensorFront = TouchSensor(Port.S1)
     notReached = True
     sonar = UltrasonicSensor(Port.S2)
@@ -119,10 +120,14 @@ def forward(speed):
             resetWatch()
             started = True
         if leftTraceStart:
-            done = checkIfAtDestination(traceStartPos)
+            done = checkIfAtDestination(goalPos)
+            distanceFromMLine = distanceFromMLine(startPos, goalPos)
+            ACCEPTANCE_RADIUS = 100
+            if (distanceFromMLine <= 100):
+                stop()
+                return 1
             if (done): 
-                checkIfAtDestination(traceStartPos)
-                return 4
+                return 6
         else:
             leftTraceStart = checkIfAtDestination(traceStartPos)
             if leftTraceStart: print("Left trace start radius")
@@ -154,39 +159,48 @@ def forwardBump():
     getAngle()
     currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
 
-def returnToStart():
-    global currPos
+def driveTowardsGoal():
+    global currPos, goalPos
+    ACCEPTANCE_RADIUS = 100
     ERROR_CORRECTION = .8
-    print("returning to start")
+    print("Moving towards goal")
     neededTurnDeg = 0.0
     desiredHeading = 0.0
-    desiredHeading = getAngleToFacePoint((74.25572001155581, 126.9482924725219, 4.433136300065597), (0, 0))
+    desiredHeading = getAngleToFacePoint(currPos, (1800, 1800))
     desiredHeading = (desiredHeading + 360) % 360
     currentHeading = (degrees(currPos[2]) + 360) % 360
     neededTurnDeg = desiredHeading - currentHeading    #  degrees(currentHeading) - desiredHeading
     neededTurnDeg = (neededTurnDeg + 180) % 360 - 180
     neededTurnDeg = trunc(neededTurnDeg * ERROR_CORRECTION)
-    print("current: " + str(currentHeading))
-    print("Desired heading: " + str(desiredHeading))
-    print("Need Turn: " + str(neededTurnDeg))
     resetWatch()
     turnInPlace(speed, -neededTurnDeg)
     if (neededTurnDeg > 0): 
-        currPos = calculatePosition(currPos, getDeltaTime(), speed, speed * -1, radians(angle))
+            currPos = calculatePosition(currPos, getDeltaTime(), speed, speed * -1, radians(getAngle()))
     elif (neededTurnDeg < 0):
-        currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(angle))
-    distance = findDistance(currPos, (0, 0))
-    distance *= ERROR_CORRECTION
-    distance = min(distance, distanceToWallFromStart)
-    moveForDistance(speed, distance, True, 0)
+            currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(getAngle()))
+    
+    leftMotor = Motor(Port.A)
+    rightMotor = Motor(Port.D)
+    touchSensorFront = TouchSensor(Port.S1)
+    leftMotor.run(speed)
+    rightMotor.run(speed)
+    while (True):
+        wait(100)
+        currPos = calculatePosition(currPos, getDeltaTime(), speed, speed, radians(getAngle()))
+        distanceFromGoal = distance(currPos, goalPos)
+        if (distance < ACCEPTANCE_RADIUS):
+            stop()
+            return 3
+        if (touchSensorFront.pressed()):
+            stop()
+            return 2
     return
 
 
 def distanceMLine(start, end):
     numerator = abs((end[0] - start[0])*(start[1] - currPos[1]) - (start[0] - currPos[0])*(end[1] - start[1]))
-    denominator = math.sqrt((end[0]-start[0])**2 + (end[1] - start[1])**2)
+    denominator = sqrt((end[0]-start[0])**2 + (end[1] - start[1])**2)
     return numerator / denominator
-
     
 
 state = 0
@@ -201,9 +215,11 @@ gyroWatch.resume()
 watch = StopWatch()
 angle = 0
 distanceFromDest = 0
-startPos = (0.0, 0.0, 0.0)
+
+startPos = (1000, 0.0, 0.0)
+goalPos = (1800, 1800, 0.0)
 traceStartPos = (0.0, 0.0, 0.0)
-currPos = (0.0, 0.0, 0.0)
+currPos = (1000, 0.0, 0.0)
 inProgress = True
 leftTraceStart = False
 distanceToWallFromStart = 0.0
@@ -211,24 +227,17 @@ while inProgress:
     if state == 0: #david   
         # start
         waitForCenterButton()
-        start(speed)
         nextState = 1
     elif state == 1: #cody
-        # startStop
-        startStop()
-        nextState = 2
-    elif state == 2: #david
-        # forward
-        nextState = forward(speed)
-    elif state == 3: #cody
-        # forwardBump
+        # move Towards Goal
+        nextState = driveTowardsGoal()
+    elif state == 2: #cody
+        # trade Obstacle
+        nextState = traceObstacle()
+    elif state == 3:
         forwardBump()
         nextState = 2
-    elif state == 4: 
-        # return to start
-        returnToStart()
-        nextState = 6
-    elif state == 6: #cody
+    elif state == 4: #cody
         # end
         stop()
         inProgress = False
