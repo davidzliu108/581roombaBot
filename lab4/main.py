@@ -54,7 +54,7 @@ def findDistance(a, b):
 
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
-    tolerance = 100 # in mm
+    tolerance = 50 # in mm
     distance = findDistance(currPos, destination)
     counter = counter + 1
     if (counter >= 10):
@@ -124,7 +124,7 @@ def traceObstacle():
 def forwardBump():
     global currPos, speed
     resetWatch()
-    moveForDistance(-1 * speed, 90, True, 0)
+    moveForDistance(-1 * speed, 120, True, 0)
     getAngle()
     currPos =  calculatePosition(currPos, getDeltaTime(), radians(speed * -1), radians(speed * -1), radians(angle))
     resetWatch()
@@ -191,7 +191,7 @@ def distanceMLine(start, end):
     
 
 state = 0
-speed = 200
+speed = 250
 counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S4, Direction.COUNTERCLOCKWISE)
@@ -223,7 +223,7 @@ while inProgress:
         # end
         stop()
         inProgress = False
-        ev3.screen.draw_image(ImageFile.THUMBS_UP)
+        #ev3.screen.draw_image(ImageFile.THUMBS_UP)
         ev3.speaker.beep()
         wait(200)
         ev3.speaker.play_file(SoundFile.T_REX_ROAR)
