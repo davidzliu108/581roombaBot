@@ -223,7 +223,10 @@ while inProgress:
         # end
         stop()
         inProgress = False
+        ev3.screen.draw_image(ImageFile.THUMBS_UP)
         ev3.speaker.beep()
+        wait(200)
+        ev3.speaker.play_file(SoundFile.T_REX_ROAR)
         print("Finished!")
         
     state = nextState
