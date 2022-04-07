@@ -1,5 +1,5 @@
 from pybricks.hubs import EV3Brick
-from math import sin, cos
+from math import sin, cos, degrees
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
 from pybricks.parameters import Port, Stop, Direction, Button, Color
@@ -65,8 +65,8 @@ def calculatePositionWhenStraight(currPosition, speed, deltaTime, heading):
     return (xPrime, yPrime, currPosition[2])
 
 def getAngleToFacePoint(start, end):
-    angle= math.atan2(end[1] - start[1], end[0] - start[0])
-    angle = angle * (180 / math.pi)
+    angle = math.atan2(end[1] - start[1], end[0] - start[0])
+    angle = degrees(angle)
     if (angle < 0):
         angle = 360 - (-angle)
-    return math.trunc(angle * -1)
+    return math.trunc(angle)
