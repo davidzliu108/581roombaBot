@@ -1,8 +1,4 @@
-# Cody Irion PID: 702442575
-#  David Liu PID: 730317472
-# 
-# !/usr/bin/env pybricks-micropython
-from turtle import distance
+#!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -52,9 +48,9 @@ def checkIfAtDestination(destination):
     counter = counter + 1
     if (counter >= 10):
         counter = 0
-        print("Angle:" + str(angle))
-        print("Pos: " + str(currPos))
-        print("Distance: " + str(distance))
+        # print("Angle:" + str(angle))
+        # print("Pos: " + str(currPos))
+        # print("Distance: " + str(distance))
     if (leftTraceStart):
         leftTraceStart = True
         done = distance <= tolerance
@@ -121,7 +117,8 @@ def traceObstacle():
             started = True
         if leftTraceStart:
             done = checkIfAtDestination(goalPos)
-            distanceFromMLine = distanceFromMLine(startPos, goalPos)
+            distanceFromMLine = distanceMLine(currPos, goalPos)
+            print("Distance from M: " + str(distanceFromMLine))
             ACCEPTANCE_RADIUS = 100
             if (distanceFromMLine <= 100):
                 stop()
@@ -167,17 +164,17 @@ def driveTowardsGoal():
     neededTurnDeg = 0.0
     desiredHeading = 0.0
     desiredHeading = getAngleToFacePoint(currPos, (1800, 1800))
-    desiredHeading = (desiredHeading + 360) % 360
-    currentHeading = (degrees(currPos[2]) + 360) % 360
+    desiredHeading = (desiredHeading + 180) % 360 - 180
+    currentHeading = (angle + 180) % 360 - 180
     neededTurnDeg = desiredHeading - currentHeading    #  degrees(currentHeading) - desiredHeading
     neededTurnDeg = (neededTurnDeg + 180) % 360 - 180
     neededTurnDeg = trunc(neededTurnDeg * ERROR_CORRECTION)
     resetWatch()
     turnInPlace(speed, -neededTurnDeg)
     if (neededTurnDeg > 0): 
-            currPos = calculatePosition(currPos, getDeltaTime(), speed, speed * -1, radians(getAngle()))
+            currPos = calculatePosition(currPos, getDeltaTime(), radians(speed), radians(speed * -1), radians(getAngle()))
     elif (neededTurnDeg < 0):
-            currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(getAngle()))
+            currPos = calculatePosition(currPos, getDeltaTime(), radians(speed * -1), radians(speed), radians(getAngle()))
     
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
@@ -186,9 +183,9 @@ def driveTowardsGoal():
     rightMotor.run(speed)
     while (True):
         wait(100)
-        currPos = calculatePosition(currPos, getDeltaTime(), speed, speed, radians(getAngle()))
-        distanceFromGoal = distance(currPos, goalPos)
-        if (distance < ACCEPTANCE_RADIUS):
+        currPos = calculatePosition(currPos, getDeltaTime(), radians(speed), radians(speed), radians(getAngle()))
+        distanceFromGoal = findDistance(currPos, goalPos)
+        if (distanceFromGoal < ACCEPTANCE_RADIUS):
             stop()
             return 3
         if (touchSensorFront.pressed()):

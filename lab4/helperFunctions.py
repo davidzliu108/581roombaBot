@@ -65,7 +65,7 @@ def calculatePositionWhenStraight(currPosition, speed, deltaTime, heading):
     return (xPrime, yPrime, currPosition[2])
 
 def getAngleToFacePoint(start, end):
-    angle= math.atan2(end[0] - start[0], end[1] - start[1])
+    angle= math.atan2(end[1] - start[1], end[0] - start[0])
     angle = angle * (180 / math.pi)
     if (angle < 0):
         angle = 360 - (-angle)
