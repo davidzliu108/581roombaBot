@@ -1,8 +1,4 @@
-# Cody Irion PID: 702442575
-#  David Liu PID: 730317472
-# 
-# !/usr/bin/env pybricks-micropython
-from turtle import distance
+#!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
                                  InfraredSensor, UltrasonicSensor, GyroSensor)
@@ -10,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians, degrees,trunc,sqrt
+from math import pi, radians, degrees,trunc,sqrt, cos, sin
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -34,36 +30,45 @@ import math
 # Create your objects here.
 ev3 = EV3Brick()
 
+def calculateNeededTurn():
+    global angle, currPost, goalPos, gyro, counter
+    desiredHeading = 0.0
+    desiredHeading = getAngleToFacePoint(currPos, goalPos)
+    desiredHeading = (desiredHeading + 180) % 360 - 180
+    currentHeading = (angle + 180) % 360 - 180
+    neededTurnDeg = desiredHeading - currentHeading   #  degrees(currentHeading) - desiredHeading
+    neededTurnDeg = (neededTurnDeg + 180) % 360 - 180
+    if (counter >= 20):
+        print
+    return trunc(neededTurnDeg)
+
 def getAngle():
     global angle, currPos, gyro
     angle += gyro.angle()
     gyro.reset_angle(0)
     return angle
-    
-    
+     
 def findDistance(a, b):
-    b = getDestinationMP(b, 150)
+    # b = getDestinationMP(b, 150)
     squaredXs = (b[0] - a[0]) ** 2
     squaredYs = (b[1] - a[1]) ** 2
     return (squaredXs + squaredYs) ** 0.5
 
+# def getDestinationMP(destination, distAdd):
+#     global angle
+#     return (destination[0]-cos(getAngle())*distAdd, destination[1]-sin(getAngle())*distAdd)
+
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
-    tolerance = 200 # in mm
+    tolerance = 50 # in mm
     distance = findDistance(currPos, destination)
     counter = counter + 1
     if (counter >= 10):
         counter = 0
-        print("Angle:" + str(angle))
+        # print("Angle:" + str(angle))
         print("Pos: " + str(currPos))
         print("Distance: " + str(distance))
-    if (leftTraceStart):
-        leftTraceStart = True
-        done = distance <= tolerance
-        return done
-    else: 
-        return distance > tolerance * 1.25
-
+    return distance <= tolerance
 
 def getDestinationMP(destination, distAdd):
     global angle
@@ -77,37 +82,10 @@ def resetWatch():
 def getDeltaTime():
     time = watch.time()
     watch.reset()
-    return time
-
-def start(speed):
-    global traceStartPos, currPos
-    gyro.reset_angle(0)
-    print("Start: " + str(gyro.angle()))
-    resetWatch()
-    moveUntilContact(speed)
-    getAngle()
-    print("After Bump: " + str(angle)) 
-    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed), radians(angle))
-    return
-
-def startStop():
-    global currPos, speed, traceStartPos, distanceToWallFromStart
-    resetWatch()
-    moveForDistance(-1 * speed, 130, True, 0)
-    getAngle()
-    currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1), radians(angle))
-    distanceToWallFromStart = findDistance((0,0), currPos)
-    traceStartPos = currPos
-
-    print("Trace: " + str(traceStartPos))
-    ev3.speaker.beep()
-    resetWatch()
-    turnInPlace(speed, 90)
-    getAngle()
-    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
-    return
+    return time / 1000
 
 def traceObstacle():
+    # TODO do something to account for the instance where we are turning right after reaching M line but close to wall
     resetWatch()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
@@ -119,36 +97,35 @@ def traceObstacle():
     idealDistance = 100
     started = False
     distanceFromWallDelta = 0
+    mCount = 0 # quick and dirty count to wait a set amount of time before checking if we are at the m line
     while (notReached):
         if started:
-            getAngle()
-            currPos = calculatePosition(currPos, getDeltaTime()/1000, radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta), radians(angle))
+            currPos = calculatePosition(currPos, getDeltaTime(), radians(leftMotor.speed() + distanceFromWallDelta), radians(rightMotor.speed() - distanceFromWallDelta), radians(getAngle()))
         else:
             resetWatch()
             started = True
-        if leftTraceStart:
-            done = checkIfAtDestination(goalPos)
-            distanceFromMLine = distanceFromMLine(startPos, goalPos)
-            ACCEPTANCE_RADIUS = 100
+        if mCount >= 50:
+            
+            distanceFromMLine = distanceMLine(startPos, goalPos)
             if (distanceFromMLine <= 100):
                 stop()
                 return 1
-            if (done): 
-                return 6
         else:
-            leftTraceStart = checkIfAtDestination(traceStartPos)
-            if leftTraceStart: print("Left trace start radius")
+            mCount += 1
+        done = checkIfAtDestination(goalPos)
+        if (done): 
+                return 4
         distanceFromWall = sonar.distance()
         distanceFromWallDelta = idealDistance - distanceFromWall
         negative = distanceFromWallDelta < 0
-        distanceFromWallDelta = min(abs(distanceFromWallDelta), 80)
+        distanceFromWallDelta = min(abs(distanceFromWallDelta), 120)
         if (negative):
             distanceFromWallDelta = distanceFromWallDelta * -1
         else:
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
-        if touchSensorFront.pressed() == True:
+        if touchSensorFront.pressed():
             notReached = False
             stop()
             return 3
@@ -158,49 +135,63 @@ def traceObstacle():
 def forwardBump():
     global currPos, speed
     resetWatch()
-    moveForDistance(-1 * speed, 90, True, 0)
+    moveForDistance(-1 * speed, 120, True, 0)
     getAngle()
-    currPos =  calculatePosition(currPos, getDeltaTime() / 1000, radians(speed * -1), radians(speed * -1), radians(angle))
+    currPos =  calculatePosition(currPos, getDeltaTime(), radians(speed * -1), radians(speed * -1), radians(angle))
     resetWatch()
     turnInPlace(speed, 90)
     getAngle()
-    currPos = calculatePosition(currPos, getDeltaTime() / 1000, radians(speed), radians(speed * -1), radians(angle))
+    currPos = calculatePosition(currPos, getDeltaTime(), radians(speed), radians(speed * -1), radians(angle))
 
 def driveTowardsGoal():
     global currPos, goalPos
     ACCEPTANCE_RADIUS = 100
-    ERROR_CORRECTION = .8
-    print("Moving towards goal")
-    neededTurnDeg = 0.0
-    desiredHeading = 0.0
-    desiredHeading = getAngleToFacePoint(currPos, (1800, 1800))
-    desiredHeading = (desiredHeading + 360) % 360
-    currentHeading = (degrees(currPos[2]) + 360) % 360
-    neededTurnDeg = desiredHeading - currentHeading    #  degrees(currentHeading) - desiredHeading
-    neededTurnDeg = (neededTurnDeg + 180) % 360 - 180
-    neededTurnDeg = trunc(neededTurnDeg * ERROR_CORRECTION)
+    ERROR_CORRECTION = 1
+    getAngle()
+    print("Current Heading: " + str(angle))
+    neededTurnDeg = calculateNeededTurn()
+    print("Turning: " + str(-neededTurnDeg))
     resetWatch()
     turnInPlace(speed, -neededTurnDeg)
+
     if (neededTurnDeg > 0): 
-            currPos = calculatePosition(currPos, getDeltaTime(), speed, speed * -1, radians(getAngle()))
+            currPos = calculatePosition(currPos, getDeltaTime(), radians(speed), radians(speed * -1), radians(getAngle()))
     elif (neededTurnDeg < 0):
-            currPos = calculatePosition(currPos, getDeltaTime(), speed * -1, speed, radians(getAngle()))
-    
+            currPos = calculatePosition(currPos, getDeltaTime(), radians(speed * -1), radians(speed), radians(getAngle()))
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     touchSensorFront = TouchSensor(Port.S1)
     leftMotor.run(speed)
     rightMotor.run(speed)
+    leftSpeedDiff = 0
+    rightSpeedDiff = 0
     while (True):
-        wait(100)
-        currPos = calculatePosition(currPos, getDeltaTime(), speed, speed, radians(getAngle()))
-        distanceFromGoal = distance(currPos, goalPos)
-        if (distance < ACCEPTANCE_RADIUS):
+        wait(50)
+        currPos = calculatePosition(currPos, getDeltaTime(), radians(speed + leftSpeedDiff), radians(speed + rightSpeedDiff), radians(getAngle()))
+        neededTurnDeg = calculateNeededTurn()
+        speedDiff = 0
+        if (abs(neededTurnDeg) != 0):
+            if (neededTurnDeg < 0):
+                speedDiff = max(neededTurnDeg * 10, -100)
+                leftSpeedDiff = speedDiff  *-1
+                rightSpeedDiff = speedDiff
+            else:
+                speedDiff = min(neededTurnDeg * 10, 100)
+                leftSpeedDiff = speedDiff *-1
+                rightSpeedDiff = speedDiff
+        else:
+            leftSpeedDiff = 0
+            rightSpeedDiff = 0
+        finished = checkIfAtDestination(goalPos)
+        if (finished):
             stop()
-            return 3
+            print("finished")
+            return 4
         if (touchSensorFront.pressed()):
             stop()
             return 2
+        leftMotor.run(speed + leftSpeedDiff)
+        rightMotor.run(speed + rightSpeedDiff) 
     return
 
 
@@ -211,26 +202,20 @@ def distanceMLine(start, end):
     
 
 state = 0
-speed = 200
+speed = 350
 counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S4, Direction.COUNTERCLOCKWISE)
-gyro.reset_angle(0)
+gyro.reset_angle(90)
 gyroWatch = StopWatch()
 gyroWatch.reset()
 gyroWatch.resume()
 watch = StopWatch()
 angle = 0
-distanceFromDest = 0
-
-startPos = (1000, 0.0, 0.0)
+startPos = (1000, 0.0, 1.5708)
 goalPos = (1800, 1800, 0.0)
-traceStartPos = (0.0, 0.0, 0.0)
-currPos = (1000, 0.0, 0.0)
+currPos = (1000, 0.0, 1.5708)
 inProgress = True
-leftTraceStart = False
-distanceToWallFromStart = 0.0
-
 while inProgress:
     if state == 0: #david   
         # start
@@ -249,7 +234,10 @@ while inProgress:
         # end
         stop()
         inProgress = False
+        #ev3.screen.draw_image(ImageFile.THUMBS_UP)
         ev3.speaker.beep()
+        wait(200)
+        ev3.speaker.play_file(SoundFile.T_REX_ROAR)
         print("Finished!")
         
     state = nextState
