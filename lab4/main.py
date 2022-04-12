@@ -11,6 +11,7 @@ from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
 from helperFunctions import waitForCenterButton, getAngleToFacePoint
+import math
 
 ###### NEEDED METHODS #######
 # Methods: findDistanceFromLine, driveTowardsGoal
@@ -68,6 +69,11 @@ def checkIfAtDestination(destination):
         print("Pos: " + str(currPos))
         print("Distance: " + str(distance))
     return distance <= tolerance
+
+def getDestinationMP(destination, distAdd):
+    global angle
+    return (destination[0]+math.cos(getAngle())*distAdd, destination[1]+math.sin(getAngle())*distAdd)
+
 
 def resetWatch():
     watch.reset()
