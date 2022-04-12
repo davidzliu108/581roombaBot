@@ -13,19 +13,11 @@ from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, g
 from helperFunctions import waitForCenterButton, getAngleToFacePoint
 import math
 
-###### NEEDED METHODS #######
-# Methods: findDistanceFromLine, driveTowardsGoal
-#       
-#
-
-
-
 # This program requires LEGO EV3 MicroPython v2.0 or higher.
 # Click "Open user guide" on the EV3 extension tab for more information.
 
 # L = 136.525mm
 # radius of wheel = 28mm
-
 
 # Create your objects here.
 ev3 = EV3Brick()
@@ -60,7 +52,7 @@ def findDistance(a, b):
 
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
-    tolerance = 50 # in mm
+    tolerance = 150 # in mm
     distance = findDistance(currPos, destination)
     counter = counter + 1
     if (counter >= 10):
@@ -92,6 +84,7 @@ def traceObstacle():
     global currPos, traceStartPos, leftTraceStart
     global angle, gyroWatch, gyro, speed
     touchSensorFront = TouchSensor(Port.S1)
+    touchSensorFrontR = TouchSensor(Port.S3)
     notReached = True
     sonar = UltrasonicSensor(Port.S2)
     idealDistance = 100
@@ -125,7 +118,7 @@ def traceObstacle():
             distanceFromWallDelta * 3
         leftMotor.run(speed + distanceFromWallDelta)
         rightMotor.run(speed - distanceFromWallDelta)
-        if touchSensorFront.pressed():
+        if touchSensorFront.pressed() or touchSensorFrontR.pressed():
             notReached = False
             stop()
             return 3
@@ -139,7 +132,7 @@ def forwardBump():
     getAngle()
     currPos =  calculatePosition(currPos, getDeltaTime(), radians(speed * -1), radians(speed * -1), radians(angle))
     resetWatch()
-    turnInPlace(speed, 90)
+    turnInPlace(speed / 2, 90)
     getAngle()
     currPos = calculatePosition(currPos, getDeltaTime(), radians(speed), radians(speed * -1), radians(angle))
 
@@ -161,6 +154,7 @@ def driveTowardsGoal():
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
     touchSensorFront = TouchSensor(Port.S1)
+    touchSensorFrontR = TouchSensor(Port.S3)
     leftMotor.run(speed)
     rightMotor.run(speed)
     leftSpeedDiff = 0
@@ -187,7 +181,7 @@ def driveTowardsGoal():
             stop()
             print("finished")
             return 4
-        if (touchSensorFront.pressed()):
+        if (touchSensorFront.pressed() or touchSensorFrontR.pressed()):
             stop()
             return 2
         leftMotor.run(speed + leftSpeedDiff)

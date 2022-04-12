@@ -11,7 +11,7 @@ from moveStraight import getTimeToDestinationInMS
 from constants import LARGE_WHEEL_DIAMETER_IN_MM
 from moveStraight import getCircumference
 
-robotWidth = robotWidth = 140
+robotWidth = 140
 
 
 def getTimeToTurnInMSFromDeg(deg, speed):
