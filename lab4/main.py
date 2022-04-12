@@ -6,7 +6,7 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-from math import pi, radians, degrees,trunc,sqrt
+from math import pi, radians, degrees,trunc,sqrt, cos, sin
 from helperFunctions import calculatePosition
 from turn import turnInPlace, leftCorrect
 from moveStraight import moveForDistance, moveUntilObstacle, moveUntilContact, getCircumference, getTimeToDestinationInMS, stop, getDistanceTraveled
@@ -48,9 +48,14 @@ def getAngle():
     return angle
      
 def findDistance(a, b):
+    # b = getDestinationMP(b, 150)
     squaredXs = (b[0] - a[0]) ** 2
     squaredYs = (b[1] - a[1]) ** 2
     return (squaredXs + squaredYs) ** 0.5
+
+# def getDestinationMP(destination, distAdd):
+#     global angle
+#     return (destination[0]-cos(getAngle())*distAdd, destination[1]-sin(getAngle())*distAdd)
 
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
@@ -107,7 +112,7 @@ def traceObstacle():
         distanceFromWall = sonar.distance()
         distanceFromWallDelta = idealDistance - distanceFromWall
         negative = distanceFromWallDelta < 0
-        distanceFromWallDelta = min(abs(distanceFromWallDelta), 80)
+        distanceFromWallDelta = min(abs(distanceFromWallDelta), 120)
         if (negative):
             distanceFromWallDelta = distanceFromWallDelta * -1
         else:
@@ -191,7 +196,7 @@ def distanceMLine(start, end):
     
 
 state = 0
-speed = 250
+speed = 350
 counter = 19 ## prints every 20th cycle starting with the first
 sonar = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S4, Direction.COUNTERCLOCKWISE)
