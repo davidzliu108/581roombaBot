@@ -41,14 +41,9 @@ def getAngle():
     return angle
      
 def findDistance(a, b):
-    # b = getDestinationMP(b, 150)
     squaredXs = (b[0] - a[0]) ** 2
     squaredYs = (b[1] - a[1]) ** 2
     return (squaredXs + squaredYs) ** 0.5
-
-# def getDestinationMP(destination, distAdd):
-#     global angle
-#     return (destination[0]-cos(getAngle())*distAdd, destination[1]-sin(getAngle())*distAdd)
 
 def checkIfAtDestination(destination):
     global currPos, leftTraceStart, counter
@@ -57,7 +52,6 @@ def checkIfAtDestination(destination):
     counter = counter + 1
     if (counter >= 10):
         counter = 0
-        # print("Angle:" + str(angle))
         print("Pos: " + str(currPos))
         print("Distance: " + str(distance))
     return distance <= tolerance
@@ -77,7 +71,6 @@ def getDeltaTime():
     return time / 1000
 
 def traceObstacle():
-    # TODO do something to account for the instance where we are turning right after reaching M line but close to wall
     resetWatch()
     leftMotor = Motor(Port.A)
     rightMotor = Motor(Port.D)
@@ -228,7 +221,6 @@ while inProgress:
         # end
         stop()
         inProgress = False
-        #ev3.screen.draw_image(ImageFile.THUMBS_UP)
         ev3.speaker.beep()
         wait(200)
         ev3.speaker.play_file(SoundFile.T_REX_ROAR)
